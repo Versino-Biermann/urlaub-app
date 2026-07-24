@@ -1,0 +1,4 @@
+# MCP-Server der Urlaub-App
+# Grounding-Stand: getestet gegen mcp==1.28.1, pytest==9.1.1 (Python 3.13)
+mcp>=1.28,<2
+pytest>=8,<10

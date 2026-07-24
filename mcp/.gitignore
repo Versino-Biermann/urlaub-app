@@ -1,0 +1,5 @@
+# Python-Artefakte des MCP-Servers (nicht committen)
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
