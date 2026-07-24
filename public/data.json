@@ -1,17 +1,9 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-07-24T15:11:40Z",
+  "updatedAt": "2026-07-24T15:12:46Z",
   "data": {
-    "etappen": [
-      {
-        "id": "e45077f90f70418fb9ef1ffc2455a7ef",
-        "name": "__MCP_TEST__",
-        "vonDatum": "2026-08-12",
-        "bisDatum": "2026-08-14",
-        "notiz": "E2E-Nachweis"
-      }
-    ],
+    "etappen": [],
     "bookings": [],
     "route": [],
     "sightseeing": [],
