@@ -1,0 +1,13 @@
+{
+  "app": "urlaub-app",
+  "version": 1,
+  "updatedAt": null,
+  "data": {
+    "etappen": [],
+    "bookings": [],
+    "route": [],
+    "sightseeing": [],
+    "events": [],
+    "restaurants": []
+  }
+}
