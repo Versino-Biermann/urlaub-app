@@ -1,0 +1,152 @@
+/* ---------------------------------------------------------------
+   Urlaub-App — globale Tokens & Reset
+   Theme "Coastal Road": Tiefes Tanne-Teal als Leitfarbe (Vertrauen,
+   Ruhe, "Reise-Tiefe"), gebrochenes Terrakotta als warmer Zweitakzent
+   fuer Warn-/Delete-Signale — passend zu einer Autorundreise ohne in
+   Kitsch zu kippen. Kein Fliederverlauf, kein Creme-Hintergrund.
+   Schrift: Fraunces (Editorial-Serife, ein Google-Font-Import) fuer
+   Ueberschriften, System-Sans fuer Fliesstext/Formulare.
+   ----------------------------------------------------------------*/
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
+
+:root {
+  color-scheme: light dark;
+
+  /* Typografie */
+  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Abstands-Skala */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Radien */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* Farben — Light */
+  --color-bg: #f2f5f4;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eaeeec;
+  --color-border: #dde3e1;
+  --color-text: #2a3535;
+  --color-text-muted: #5c6b69;
+  --color-heading: #102a2b;
+
+  --accent: #146a70;
+  --accent-strong: #0d4d52;
+  --accent-soft: rgba(20, 106, 112, 0.1);
+  --accent-ring: rgba(20, 106, 112, 0.35);
+  --accent-contrast: #f7fbfa;
+
+  --danger: #a9482f;
+  --danger-strong: #8a3a25;
+  --danger-soft: rgba(169, 72, 47, 0.08);
+
+  --status-geplant-bg: #f3e6d2;
+  --status-geplant-text: #8a5a26;
+  --status-besucht-bg: #e2efe0;
+  --status-besucht-text: #3c6b3f;
+
+  --shadow-sm: 0 1px 2px rgba(16, 42, 43, 0.06);
+  --shadow-md: 0 8px 24px -8px rgba(16, 42, 43, 0.18);
+  --shadow-focus: 0 0 0 3px var(--accent-ring);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #10191a;
+    --color-surface: #172224;
+    --color-surface-muted: #1d2a2c;
+    --color-border: #29383a;
+    --color-text: #d7e2e0;
+    --color-text-muted: #8fa3a1;
+    --color-heading: #eef5f3;
+
+    --accent: #55b8ad;
+    --accent-strong: #7bcabe;
+    --accent-soft: rgba(85, 184, 173, 0.14);
+    --accent-ring: rgba(85, 184, 173, 0.4);
+    --accent-contrast: #08211f;
+
+    --danger: #d98a6a;
+    --danger-strong: #e6a184;
+    --danger-soft: rgba(217, 138, 106, 0.12);
+
+    --status-geplant-bg: rgba(214, 164, 90, 0.16);
+    --status-geplant-text: #e3c188;
+    --status-besucht-bg: rgba(120, 180, 120, 0.16);
+    --status-besucht-text: #a7d3a4;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 28px -10px rgba(0, 0, 0, 0.5);
+    --shadow-focus: 0 0 0 3px var(--accent-ring);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  font: 16px/1.6 var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2 {
+  font-family: var(--font-heading);
+  color: var(--color-heading);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
+  letter-spacing: -0.005em;
+  margin-bottom: var(--space-4);
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
