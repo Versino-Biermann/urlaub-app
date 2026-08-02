@@ -62,8 +62,9 @@ export default function Bookings() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setBookings((prev) => prev.filter((b) => b.id !== id))
+  function handleDelete(buchung) {
+    if (!window.confirm(`Buchung "${buchung.titel}" wirklich löschen?`)) return
+    setBookings((prev) => prev.filter((b) => b.id !== buchung.id))
   }
 
   function handleEdit(booking) {
@@ -113,7 +114,7 @@ export default function Bookings() {
                 <button type="button" onClick={() => handleEdit(b)}>
                   Bearbeiten
                 </button>
-                <button type="button" className="delete" onClick={() => handleDelete(b.id)}>
+                <button type="button" className="delete" onClick={() => handleDelete(b)}>
                   Löschen
                 </button>
               </div>
