@@ -93,15 +93,19 @@ Eintrag in der `.mcp.json` (Registrierung macht Christof/Larry separat):
 | Tool | Zweck |
 |---|---|
 | `get_overview()` | Zeigt Anzahl je Kategorie, Etappen (name+id) und Titel je Kategorie. |
-| `add_etappe(name, vonDatum, bisDatum, notiz)` | Reise-Etappe (Stadt/Abschnitt). |
-| `add_buchung(titel, typ, datum, checkIn, checkOut, notiz, etappe)` | typ ∈ Flug/Unterkunft/Mietwagen/Transfer. |
-| `add_fahrt(von, nach, datum, distanz, notiz, etappe)` | Reiseroute-Abschnitt. |
-| `add_event(titel, datum, ort, kontakt, status, notiz, etappe)` | status ∈ geplant/gebucht. |
-| `add_restaurant(name, ort, kueche, reservierung, kontakt, notiz, etappe)` | Restaurant. |
-| `add_sehenswuerdigkeit(titel, ort, kategorie, status, notiz, etappe)` | status ∈ geplant/besucht. |
+| `add_etappe(name, vonDatum, bisDatum, notiz, link)` | Reise-Etappe (Stadt/Abschnitt). |
+| `add_buchung(titel, typ, datum, checkIn, checkOut, notiz, link, etappe)` | typ ∈ Flug/Unterkunft/Mietwagen/Transfer. |
+| `add_fahrt(von, nach, datum, distanz, notiz, link, etappe)` | Reiseroute-Abschnitt. |
+| `add_event(titel, datum, ort, kontakt, status, notiz, link, etappe)` | status ∈ geplant/gebucht. |
+| `add_restaurant(name, ort, kueche, reservierung, kontakt, notiz, link, etappe)` | Restaurant. |
+| `add_sehenswuerdigkeit(titel, ort, kategorie, status, notiz, link, etappe)` | status ∈ geplant/besucht. |
 | `update_eintrag(kategorie, id, felder)` | Merge-Update eines Eintrags. |
 | `delete_eintrag(kategorie, id)` | Eintrag löschen. |
 | `publish(message)` | Committet **nur** `public/data.json` und pusht nach `origin/master`. |
+
+**link-Argument:** optionale URL (z.B. Booking.com-Buchung). Leer = kein Link.
+Die App zeigt gesetzte Links als klickbaren Hostname an; Einträge ohne `link`
+bleiben unverändert.
 
 **Etappe-Argument:** `etappe` akzeptiert einen Namen **oder** eine id. Ist der
 Name nicht eindeutig oder unbekannt, wird **nichts** angelegt — stattdessen kommt
