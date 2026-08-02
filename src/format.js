@@ -16,6 +16,27 @@ export function formatDate(iso) {
 }
 
 /**
+ * Kopie der Liste, chronologisch nach einem ISO-Datumsschluessel sortiert.
+ * Eintraege ohne Datum wandern ans Ende und behalten dort ihre bisherige
+ * Reihenfolge.
+ *
+ * ISO-Strings (YYYY-MM-DD) sind lexikografisch vergleichbar - deshalb kein
+ * Date-Parsing. Array.prototype.sort ist seit ES2019 stabil, gleiche
+ * Schluessel behalten also die Ausgangsreihenfolge. Sortiert wird nur eine
+ * Kopie: die gespeicherte Reihenfolge bleibt unveraendert.
+ */
+export function sortByDate(list, getKey) {
+  return [...list].sort((a, b) => {
+    const ka = getKey(a) || ''
+    const kb = getKey(b) || ''
+    if (ka === kb) return 0
+    if (!ka) return 1
+    if (!kb) return -1
+    return ka < kb ? -1 : 1
+  })
+}
+
+/**
  * Kurzes Label fuer eine URL (Hostname), Fallback: die URL selbst.
  */
 export function linkLabel(url) {
