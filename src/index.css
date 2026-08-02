@@ -33,7 +33,7 @@
   --radius-lg: 18px;
   --radius-pill: 999px;
 
-  /* Farben — Light */
+  /* Farben — Light (Default; gilt auch bei data-theme="light") */
   --color-bg: #f2f5f4;
   --color-surface: #ffffff;
   --color-surface-muted: #eaeeec;
@@ -60,37 +60,120 @@
   --shadow-sm: 0 1px 2px rgba(16, 42, 43, 0.06);
   --shadow-md: 0 8px 24px -8px rgba(16, 42, 43, 0.18);
   --shadow-focus: 0 0 0 3px var(--accent-ring);
+
+  /* Farben — Dunkel-Palette. Bewusst EINMAL als eigene Tokens definiert
+     und weiter unten zweimal zugewiesen (Auto-Modus + erzwungenes Dunkel).
+     Dupliziert werden nur die Zuweisungszeilen, nie die Farbwerte selbst —
+     sonst laufen die beiden Sets bei der naechsten Farbaenderung auseinander. */
+  --dark-color-bg: #10191a;
+  --dark-color-surface: #172224;
+  --dark-color-surface-muted: #1d2a2c;
+  --dark-color-border: #29383a;
+  --dark-color-text: #d7e2e0;
+  --dark-color-text-muted: #8fa3a1;
+  --dark-color-heading: #eef5f3;
+
+  --dark-accent: #55b8ad;
+  --dark-accent-strong: #7bcabe;
+  --dark-accent-soft: rgba(85, 184, 173, 0.14);
+  --dark-accent-ring: rgba(85, 184, 173, 0.4);
+  --dark-accent-contrast: #08211f;
+
+  --dark-danger: #d98a6a;
+  --dark-danger-strong: #e6a184;
+  --dark-danger-soft: rgba(217, 138, 106, 0.12);
+
+  --dark-status-geplant-bg: rgba(214, 164, 90, 0.16);
+  --dark-status-geplant-text: #e3c188;
+  --dark-status-besucht-bg: rgba(120, 180, 120, 0.16);
+  --dark-status-besucht-text: #a7d3a4;
+
+  --dark-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --dark-shadow-md: 0 10px 28px -10px rgba(0, 0, 0, 0.5);
 }
 
+/* ---------------------------------------------------------------
+   Farbschema-Umschaltung ueber data-theme auf <html>:
+     kein Attribut / "auto" -> Systemeinstellung (wie bisher)
+     "light"                -> Hell erzwungen
+     "dark"                 -> Dunkel erzwungen
+
+   Spezifitaet beider Dunkel-Bloecke ist identisch (0,2,0):
+     :root:not([data-theme='light'])  = :root (0,1,0) + :not(Attribut) (0,1,0)
+     :root[data-theme='dark']         = :root (0,1,0) + Attribut (0,1,0)
+   Eine Media-Query erhoeht die Spezifitaet NICHT. Deshalb entscheidet die
+   Quellreihenfolge — der erzwungene Block steht bewusst als zweiter.
+   ----------------------------------------------------------------*/
+
+/* Auto-Modus: Systemeinstellung, solange nicht ausdruecklich Hell gewaehlt ist. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #10191a;
-    --color-surface: #172224;
-    --color-surface-muted: #1d2a2c;
-    --color-border: #29383a;
-    --color-text: #d7e2e0;
-    --color-text-muted: #8fa3a1;
-    --color-heading: #eef5f3;
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
 
-    --accent: #55b8ad;
-    --accent-strong: #7bcabe;
-    --accent-soft: rgba(85, 184, 173, 0.14);
-    --accent-ring: rgba(85, 184, 173, 0.4);
-    --accent-contrast: #08211f;
+    --color-bg: var(--dark-color-bg);
+    --color-surface: var(--dark-color-surface);
+    --color-surface-muted: var(--dark-color-surface-muted);
+    --color-border: var(--dark-color-border);
+    --color-text: var(--dark-color-text);
+    --color-text-muted: var(--dark-color-text-muted);
+    --color-heading: var(--dark-color-heading);
 
-    --danger: #d98a6a;
-    --danger-strong: #e6a184;
-    --danger-soft: rgba(217, 138, 106, 0.12);
+    --accent: var(--dark-accent);
+    --accent-strong: var(--dark-accent-strong);
+    --accent-soft: var(--dark-accent-soft);
+    --accent-ring: var(--dark-accent-ring);
+    --accent-contrast: var(--dark-accent-contrast);
 
-    --status-geplant-bg: rgba(214, 164, 90, 0.16);
-    --status-geplant-text: #e3c188;
-    --status-besucht-bg: rgba(120, 180, 120, 0.16);
-    --status-besucht-text: #a7d3a4;
+    --danger: var(--dark-danger);
+    --danger-strong: var(--dark-danger-strong);
+    --danger-soft: var(--dark-danger-soft);
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 10px 28px -10px rgba(0, 0, 0, 0.5);
-    --shadow-focus: 0 0 0 3px var(--accent-ring);
+    --status-geplant-bg: var(--dark-status-geplant-bg);
+    --status-geplant-text: var(--dark-status-geplant-text);
+    --status-besucht-bg: var(--dark-status-besucht-bg);
+    --status-besucht-text: var(--dark-status-besucht-text);
+
+    --shadow-sm: var(--dark-shadow-sm);
+    --shadow-md: var(--dark-shadow-md);
   }
+}
+
+/* Dunkel erzwungen — unabhaengig von der Systemeinstellung. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: var(--dark-color-bg);
+  --color-surface: var(--dark-color-surface);
+  --color-surface-muted: var(--dark-color-surface-muted);
+  --color-border: var(--dark-color-border);
+  --color-text: var(--dark-color-text);
+  --color-text-muted: var(--dark-color-text-muted);
+  --color-heading: var(--dark-color-heading);
+
+  --accent: var(--dark-accent);
+  --accent-strong: var(--dark-accent-strong);
+  --accent-soft: var(--dark-accent-soft);
+  --accent-ring: var(--dark-accent-ring);
+  --accent-contrast: var(--dark-accent-contrast);
+
+  --danger: var(--dark-danger);
+  --danger-strong: var(--dark-danger-strong);
+  --danger-soft: var(--dark-danger-soft);
+
+  --status-geplant-bg: var(--dark-status-geplant-bg);
+  --status-geplant-text: var(--dark-status-geplant-text);
+  --status-besucht-bg: var(--dark-status-besucht-bg);
+  --status-besucht-text: var(--dark-status-besucht-text);
+
+  --shadow-sm: var(--dark-shadow-sm);
+  --shadow-md: var(--dark-shadow-md);
+}
+
+/* Hell erzwungen — die Light-Werte stehen bereits in :root; hier wird nur
+   color-scheme fixiert, damit native Controls (z.B. Datumsfelder) unter
+   einem dunklen System nicht trotzdem dunkel rendern. */
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 *,
