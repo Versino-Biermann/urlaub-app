@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
-import { formatDate } from '../format'
+import { formatDate, sortByDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.route'
 
@@ -32,6 +32,8 @@ export default function Route() {
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const etappenListe = loadEtappenListe()
+  // Nur die Anzeige-Reihenfolge: chronologisch nach Fahrt-Datum.
+  const sortierteFahrten = sortByDate(etappen, (f) => f.datum)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(etappen))
@@ -76,6 +78,44 @@ export default function Route() {
     <section>
       <h2>Reiseroute</h2>
 
+      {etappen.length === 0 ? (
+        <p className="empty">Noch keine Fahrten erfasst.</p>
+      ) : (
+        <ul className="list">
+          {sortierteFahrten.map((e, index) => (
+            <li key={e.id} className="list-item">
+              <div className="list-item-main">
+                <span className="badge">{index + 1}</span>
+                <strong>
+                  {e.von} → {e.nach}
+                </strong>
+              </div>
+              {e.datum && <div className="list-item-meta">Datum: {formatDate(e.datum)}</div>}
+              {e.distanz && <div className="list-item-meta">Distanz: {e.distanz}</div>}
+              {e.etappeId && (
+                <div className="list-item-meta">
+                  Etappe: {etappenListe.find((et) => String(et.id) === String(e.etappeId))?.name || e.etappeId}
+                </div>
+              )}
+              {e.notiz && (
+                <div className="list-item-meta">
+                  <LinkedText text={e.notiz} />
+                </div>
+              )}
+              <EntryLink url={e.link} />
+              <div className="list-item-actions">
+                <button type="button" onClick={() => handleEdit(e)}>
+                  Bearbeiten
+                </button>
+                <button type="button" className="delete" onClick={() => handleDelete(e.id)}>
+                  Löschen
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <form className="form" onSubmit={handleSubmit}>
         <label>
           Von
@@ -107,13 +147,13 @@ export default function Route() {
         </label>
 
         <label>
-          Distanz (km)
+          Distanz
           <input
-            type="number"
+            type="text"
             name="distanz"
             value={form.distanz}
             onChange={handleChange}
-            placeholder="Optional"
+            placeholder="Optional, z.B. 120 km"
           />
         </label>
 
@@ -157,44 +197,6 @@ export default function Route() {
           </button>
         )}
       </form>
-
-      {etappen.length === 0 ? (
-        <p className="empty">Noch keine Fahrten erfasst.</p>
-      ) : (
-        <ul className="list">
-          {etappen.map((e, index) => (
-            <li key={e.id} className="list-item">
-              <div className="list-item-main">
-                <span className="badge">{index + 1}</span>
-                <strong>
-                  {e.von} → {e.nach}
-                </strong>
-              </div>
-              {e.datum && <div className="list-item-meta">Datum: {formatDate(e.datum)}</div>}
-              {e.distanz && <div className="list-item-meta">Distanz: {e.distanz} km</div>}
-              {e.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(e.etappeId))?.name || e.etappeId}
-                </div>
-              )}
-              {e.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={e.notiz} />
-                </div>
-              )}
-              <EntryLink url={e.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => handleEdit(e)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(e.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }
