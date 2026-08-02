@@ -1,12 +1,6 @@
-const URL_REGEX = /(https?:\/\/[^\s]+)/g
+import { linkLabel } from '../format'
 
-function getHostname(url) {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
-}
+const URL_REGEX = /(https?:\/\/[^\s]+)/g
 
 export default function LinkedText({ text }) {
   if (!text) return null
@@ -19,7 +13,7 @@ export default function LinkedText({ text }) {
         if (part.match(URL_REGEX)) {
           return (
             <a key={i} href={part} target="_blank" rel="noopener noreferrer">
-              {getHostname(part)}
+              {linkLabel(part)}
             </a>
           )
         }
