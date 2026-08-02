@@ -86,6 +86,45 @@ export default function Sightseeing() {
     <section>
       <h2>Sehenswürdigkeiten</h2>
 
+      {spots.length === 0 ? (
+        <p className="empty">Noch keine Sehenswürdigkeiten erfasst.</p>
+      ) : (
+        <ul className="list">
+          {spots.map((s) => (
+            <li key={s.id} className="list-item">
+              <div className="list-item-main">
+                <strong>{s.titel}</strong>
+                <span className={`badge status-${s.status}`}>{s.status}</span>
+              </div>
+              {s.ort && <div className="list-item-meta">Ort: {s.ort}</div>}
+              {s.kategorie && <div className="list-item-meta">Kategorie: {s.kategorie}</div>}
+              {s.etappeId && (
+                <div className="list-item-meta">
+                  Etappe: {etappenListe.find((et) => String(et.id) === String(s.etappeId))?.name || s.etappeId}
+                </div>
+              )}
+              {s.notiz && (
+                <div className="list-item-meta">
+                  <LinkedText text={s.notiz} />
+                </div>
+              )}
+              <EntryLink url={s.link} />
+              <div className="list-item-actions">
+                <button type="button" onClick={() => toggleStatus(s.id)}>
+                  Status wechseln
+                </button>
+                <button type="button" onClick={() => handleEdit(s)}>
+                  Bearbeiten
+                </button>
+                <button type="button" className="delete" onClick={() => handleDelete(s.id)}>
+                  Löschen
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <form className="form" onSubmit={handleSubmit}>
         <label>
           Titel
@@ -172,45 +211,6 @@ export default function Sightseeing() {
           </button>
         )}
       </form>
-
-      {spots.length === 0 ? (
-        <p className="empty">Noch keine Sehenswürdigkeiten erfasst.</p>
-      ) : (
-        <ul className="list">
-          {spots.map((s) => (
-            <li key={s.id} className="list-item">
-              <div className="list-item-main">
-                <strong>{s.titel}</strong>
-                <span className={`badge status-${s.status}`}>{s.status}</span>
-              </div>
-              {s.ort && <div className="list-item-meta">Ort: {s.ort}</div>}
-              {s.kategorie && <div className="list-item-meta">Kategorie: {s.kategorie}</div>}
-              {s.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(s.etappeId))?.name || s.etappeId}
-                </div>
-              )}
-              {s.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={s.notiz} />
-                </div>
-              )}
-              <EntryLink url={s.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => toggleStatus(s.id)}>
-                  Status wechseln
-                </button>
-                <button type="button" onClick={() => handleEdit(s)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(s.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }
