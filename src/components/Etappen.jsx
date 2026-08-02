@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
+import { formatDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.etappen'
 
@@ -58,7 +60,7 @@ function loadRestaurants() {
 }
 
 function emptyForm() {
-  return { name: '', vonDatum: '', bisDatum: '', notiz: '' }
+  return { name: '', vonDatum: '', bisDatum: '', notiz: '', link: '' }
 }
 
 export default function Etappen() {
@@ -148,6 +150,17 @@ export default function Etappen() {
           />
         </label>
 
+        <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
         <button type="submit">{editId !== null ? 'Änderungen speichern' : 'Etappe hinzufügen'}</button>
         {editId !== null && (
           <button type="button" onClick={handleCancelEdit}>
@@ -184,7 +197,7 @@ export default function Etappen() {
                 </div>
                 {(etappe.vonDatum || etappe.bisDatum) && (
                   <div className="list-item-meta">
-                    {etappe.vonDatum} – {etappe.bisDatum}
+                    {formatDate(etappe.vonDatum)} – {formatDate(etappe.bisDatum)}
                   </div>
                 )}
                 {etappe.notiz && (
@@ -192,6 +205,7 @@ export default function Etappen() {
                     <LinkedText text={etappe.notiz} />
                   </div>
                 )}
+                <EntryLink url={etappe.link} />
 
                 <div className="list-item-meta">
                   <strong>Übersicht</strong>
