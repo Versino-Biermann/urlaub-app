@@ -83,6 +83,14 @@
   color: var(--accent-contrast);
 }
 
+/* --- Theme-Schalter: uebernimmt die Pill-Optik der Navigation, nur
+   dezenter. min-height haelt die Flaeche auf dem Handy antippbar. --- */
+.theme-switch button {
+  font-size: 0.8rem;
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-3);
+}
+
 /* --- Formular --- */
 .form {
   display: flex;
