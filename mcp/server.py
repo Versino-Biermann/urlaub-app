@@ -373,27 +373,40 @@ def publish(message: str = "Update Reisedaten") -> dict:
         # Sprachunabhaengige Pruefung statt String-Match auf "nothing to commit":
         # returncode 0 = nichts gestaged, 1 = Aenderungen gestaged, >1 = Fehler.
         staged = _git("diff", "--cached", "--quiet", "--", rel_data)
-        if staged.returncode == 0:
-            return {
-                "status": "nichts_zu_tun",
-                "hinweis": "Keine Aenderungen an data.json zum Veroeffentlichen.",
-                "schritte": steps,
-            }
-        if staged.returncode != 1:
+        if staged.returncode not in (0, 1):
             return {
                 "status": "fehler",
                 "hinweis": f"git diff --cached fehlgeschlagen: {staged.stderr.strip()}",
                 "schritte": steps,
             }
 
-        commit = _git("commit", "-m", message)
-        if commit.returncode != 0:
-            return {
-                "status": "fehler",
-                "hinweis": f"git commit fehlgeschlagen: {commit.stderr.strip() or commit.stdout.strip()}",
-                "schritte": steps,
-            }
-        steps.append(f"git commit -m {message!r}")
+        if staged.returncode == 1:
+            commit = _git("commit", "-m", message)
+            if commit.returncode != 0:
+                return {
+                    "status": "fehler",
+                    "hinweis": f"git commit fehlgeschlagen: {commit.stderr.strip() or commit.stdout.strip()}",
+                    "schritte": steps,
+                }
+            steps.append(f"git commit -m {message!r}")
+        else:
+            # Nichts gestaged heisst nicht zwingend "nichts zu tun": ein
+            # frueherer Lauf kann committet haben und erst am Push gescheitert
+            # sein (Timeout/Netz). Dann liegt der Commit unveroeffentlicht vor
+            # und der Push muss nachgeholt werden.
+            ahead = _git("rev-list", "--count", "@{u}..HEAD")
+            if ahead.returncode == 0 and ahead.stdout.strip() == "0":
+                return {
+                    "status": "nichts_zu_tun",
+                    "hinweis": (
+                        "Keine Aenderungen an data.json und kein "
+                        "unveroeffentlichter Commit."
+                    ),
+                    "schritte": steps,
+                }
+            # returncode != 0 = kein Upstream konfiguriert, Ahead-Stand also
+            # unbekannt. Dann lieber pushen: im Zweifel ist es ein No-Op.
+            steps.append("commit uebersprungen (nichts gestaged, Push-Nachholversuch)")
 
         push = _git("push", "origin", "HEAD")
         if push.returncode != 0:
