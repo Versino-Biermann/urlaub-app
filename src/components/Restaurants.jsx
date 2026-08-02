@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
+import { formatDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.restaurants'
 
@@ -13,7 +15,7 @@ function loadRestaurants() {
 }
 
 function emptyForm() {
-  return { name: '', ort: '', kueche: '', reservierung: '', kontakt: '', notiz: '', etappeId: '' }
+  return { name: '', ort: '', kueche: '', reservierung: '', kontakt: '', notiz: '', link: '', etappeId: '' }
 }
 
 function loadEtappenListe() {
@@ -136,6 +138,17 @@ export default function Restaurants() {
         </label>
 
         <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <label>
           Etappe
           <select name="etappeId" value={form.etappeId} onChange={handleChange}>
             <option value="">— keine —</option>
@@ -166,7 +179,9 @@ export default function Restaurants() {
                 {r.kueche && <span className="badge">{r.kueche}</span>}
               </div>
               {r.ort && <div className="list-item-meta">Ort: {r.ort}</div>}
-              {r.reservierung && <div className="list-item-meta">Reservierung: {r.reservierung}</div>}
+              {r.reservierung && (
+                <div className="list-item-meta">Reservierung: {formatDate(r.reservierung)}</div>
+              )}
               {r.kontakt && <div className="list-item-meta">Kontakt: {r.kontakt}</div>}
               {r.etappeId && (
                 <div className="list-item-meta">
@@ -178,6 +193,7 @@ export default function Restaurants() {
                   <LinkedText text={r.notiz} />
                 </div>
               )}
+              <EntryLink url={r.link} />
               <div className="list-item-actions">
                 <button type="button" onClick={() => handleEdit(r)}>
                   Bearbeiten
