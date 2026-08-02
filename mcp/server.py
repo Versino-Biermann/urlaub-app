@@ -34,6 +34,11 @@ DATA_PATH = os.environ.get(
 # Repo-Root = Parent von public/
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(DATA_PATH), ".."))
 
+# Timeout pro git-Aufruf in publish(). Ein MCP-Tool darf nie unbegrenzt
+# blockieren: haengende git-Prozesse (z.B. pCloud-I/O-Blockade auf P:)
+# wuerden den Tool-Call sonst endlos offen halten.
+GIT_TIMEOUT_S = 60
+
 mcp = FastMCP(
     name="urlaub-app",
     instructions=(
@@ -335,7 +340,8 @@ def delete_eintrag(kategorie: str, id: str) -> dict:
 def publish(message: str = "Update Reisedaten") -> dict:
     """Veroeffentlicht die aktuelle public/data.json ins GitHub-Repo.
 
-    Committet AUSSCHLIESSLICH public/data.json und pusht nach origin/master.
+    Committet AUSSCHLIESSLICH public/data.json und pusht den aktuellen
+    Branch (HEAD) nach origin.
     GitHub Actions baut danach automatisch die GitHub-Pages-Seite.
 
     Bewusst getrennt von den add_*-Tools: erst mehrere Eintraege sammeln,
@@ -349,46 +355,69 @@ def publish(message: str = "Update Reisedaten") -> dict:
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
+            timeout=GIT_TIMEOUT_S,
         )
 
     steps: list[str] = []
 
-    add = _git("add", rel_data)
-    if add.returncode != 0:
-        return {
-            "status": "fehler",
-            "hinweis": f"git add fehlgeschlagen: {add.stderr.strip()}",
-            "schritte": steps,
-        }
-    steps.append(f"git add {rel_data}")
+    try:
+        add = _git("add", rel_data)
+        if add.returncode != 0:
+            return {
+                "status": "fehler",
+                "hinweis": f"git add fehlgeschlagen: {add.stderr.strip()}",
+                "schritte": steps,
+            }
+        steps.append(f"git add {rel_data}")
 
-    commit = _git("commit", "-m", message)
-    if commit.returncode != 0:
-        combined = (commit.stdout + commit.stderr).lower()
-        if "nothing to commit" in combined or "clean" in combined:
+        # Sprachunabhaengige Pruefung statt String-Match auf "nothing to commit":
+        # returncode 0 = nichts gestaged, 1 = Aenderungen gestaged, >1 = Fehler.
+        staged = _git("diff", "--cached", "--quiet", "--", rel_data)
+        if staged.returncode == 0:
             return {
                 "status": "nichts_zu_tun",
                 "hinweis": "Keine Aenderungen an data.json zum Veroeffentlichen.",
                 "schritte": steps,
             }
-        return {
-            "status": "fehler",
-            "hinweis": f"git commit fehlgeschlagen: {commit.stderr.strip() or commit.stdout.strip()}",
-            "schritte": steps,
-        }
-    steps.append(f"git commit -m {message!r}")
+        if staged.returncode != 1:
+            return {
+                "status": "fehler",
+                "hinweis": f"git diff --cached fehlgeschlagen: {staged.stderr.strip()}",
+                "schritte": steps,
+            }
 
-    push = _git("push", "origin", "master")
-    if push.returncode != 0:
+        commit = _git("commit", "-m", message)
+        if commit.returncode != 0:
+            return {
+                "status": "fehler",
+                "hinweis": f"git commit fehlgeschlagen: {commit.stderr.strip() or commit.stdout.strip()}",
+                "schritte": steps,
+            }
+        steps.append(f"git commit -m {message!r}")
+
+        push = _git("push", "origin", "HEAD")
+        if push.returncode != 0:
+            return {
+                "status": "fehler",
+                "hinweis": (
+                    f"git push fehlgeschlagen: {push.stderr.strip()}. "
+                    f"Commit liegt lokal vor, aber nicht veroeffentlicht."
+                ),
+                "schritte": steps,
+            }
+        steps.append("git push origin HEAD")
+    except subprocess.TimeoutExpired as exc:
+        cmd = exc.cmd
+        cmd_text = " ".join(cmd[1:]) if isinstance(cmd, (list, tuple)) else str(cmd)
         return {
             "status": "fehler",
             "hinweis": (
-                f"git push fehlgeschlagen: {push.stderr.strip()}. "
-                f"Commit liegt lokal vor, aber nicht veroeffentlicht."
+                f"git {cmd_text} Timeout nach {GIT_TIMEOUT_S}s — mutmasslich "
+                f"Datei-/Netzblockade (pCloud?). Kein Schaden: data.json liegt "
+                f"lokal vor."
             ),
             "schritte": steps,
         }
-    steps.append("git push origin master")
 
     return {
         "status": "ok",
