@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Navigation from './components/Navigation'
 import DataBackup from './components/DataBackup'
+import ThemeToggle from './components/ThemeToggle'
 import Bookings from './components/Bookings'
 import Sightseeing from './components/Sightseeing'
 import Route from './components/Route'
@@ -82,6 +83,7 @@ function App() {
       <header className="app-header">
         <h1>La Grande Virée</h1>
         <Navigation current={current} onChange={setCurrent} />
+        <ThemeToggle />
         <DataBackup />
       </header>
 
