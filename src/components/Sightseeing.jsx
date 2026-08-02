@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
 
 const STORAGE_KEY = 'urlaub-app.sightseeing'
 const STATUS = ['geplant', 'besucht']
@@ -14,7 +15,7 @@ function loadSpots() {
 }
 
 function emptyForm() {
-  return { titel: '', ort: '', kategorie: '', notiz: '', status: STATUS[0], etappeId: '' }
+  return { titel: '', ort: '', kategorie: '', notiz: '', link: '', status: STATUS[0], etappeId: '' }
 }
 
 function loadEtappenListe() {
@@ -131,6 +132,17 @@ export default function Sightseeing() {
         </label>
 
         <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <label>
           Status
           <select name="status" value={form.status} onChange={handleChange}>
             {STATUS.map((s) => (
@@ -183,6 +195,7 @@ export default function Sightseeing() {
                   <LinkedText text={s.notiz} />
                 </div>
               )}
+              <EntryLink url={s.link} />
               <div className="list-item-actions">
                 <button type="button" onClick={() => toggleStatus(s.id)}>
                   Status wechseln
