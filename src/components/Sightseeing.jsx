@@ -58,8 +58,9 @@ export default function Sightseeing() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setSpots((prev) => prev.filter((s) => s.id !== id))
+  function handleDelete(spot) {
+    if (!window.confirm(`Sehenswürdigkeit "${spot.titel}" wirklich löschen?`)) return
+    setSpots((prev) => prev.filter((s) => s.id !== spot.id))
   }
 
   function handleEdit(spot) {
@@ -116,7 +117,7 @@ export default function Sightseeing() {
                 <button type="button" onClick={() => handleEdit(s)}>
                   Bearbeiten
                 </button>
-                <button type="button" className="delete" onClick={() => handleDelete(s.id)}>
+                <button type="button" className="delete" onClick={() => handleDelete(s)}>
                   Löschen
                 </button>
               </div>
