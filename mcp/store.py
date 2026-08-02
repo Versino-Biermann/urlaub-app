@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -43,6 +44,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "vonDatum": "",
         "bisDatum": "",
         "notiz": "",
+        "link": "",
     },
     "bookings": {
         "titel": "",
@@ -51,6 +53,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "checkIn": "",
         "checkOut": "",
         "notiz": "",
+        "link": "",
         "etappeId": "",
     },
     "route": {
@@ -59,6 +62,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "datum": "",
         "distanz": "",
         "notiz": "",
+        "link": "",
         "etappeId": "",
     },
     "sightseeing": {
@@ -66,6 +70,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "ort": "",
         "kategorie": "",
         "notiz": "",
+        "link": "",
         "status": "",
         "etappeId": "",
     },
@@ -76,6 +81,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "kontakt": "",
         "status": "",
         "notiz": "",
+        "link": "",
         "etappeId": "",
     },
     "restaurants": {
@@ -85,6 +91,7 @@ CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
         "reservierung": "",
         "kontakt": "",
         "notiz": "",
+        "link": "",
         "etappeId": "",
     },
 }
@@ -95,6 +102,29 @@ ENUMS: dict[tuple[str, str], tuple[str, ...]] = {
     ("sightseeing", "status"): ("geplant", "besucht"),
     ("events", "status"): ("geplant", "gebucht"),
 }
+
+
+# Retry fuer den atomaren Rename in save_data(). Auf P: (pCloud) sperrt der
+# Sync-Client die Zieldatei kurzzeitig, os.replace scheitert dann mit
+# PermissionError ([WinError 5]); der naechste Versuch klappt.
+REPLACE_RETRIES = 2
+REPLACE_RETRY_DELAY_S = 0.5
+
+
+def _replace_with_retry(tmp_path: str, path: str) -> None:
+    """os.replace mit kurzem Retry bei PermissionError (pCloud-Dateisperre).
+
+    Nach ``REPLACE_RETRIES`` erfolglosen Wiederholungen wird der
+    PermissionError unveraendert weitergegeben.
+    """
+    for versuch in range(REPLACE_RETRIES + 1):
+        try:
+            os.replace(tmp_path, path)
+            return
+        except PermissionError:
+            if versuch == REPLACE_RETRIES:
+                raise
+            time.sleep(REPLACE_RETRY_DELAY_S)
 
 
 class StoreError(Exception):
@@ -159,7 +189,7 @@ def load_data(path: str) -> dict[str, Any]:
 
 
 def save_data(path: str, data: dict[str, Any]) -> dict[str, Any]:
-    """Speichert data.json atomar (temp-Datei + os.replace).
+    """Speichert data.json atomar (temp-Datei + os.replace, mit Retry).
 
     - setzt ``updatedAt`` auf aktuellen ISO-UTC-Zeitstempel
     - schreibt huebsch eingerueckt, ``ensure_ascii=False``
@@ -178,7 +208,7 @@ def save_data(path: str, data: dict[str, Any]) -> dict[str, Any]:
             fh.write("\n")
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp_path, path)
+        _replace_with_retry(tmp_path, path)
     except BaseException:
         # Temp-Datei bei Fehler aufraeumen, Original bleibt unangetastet.
         try:
