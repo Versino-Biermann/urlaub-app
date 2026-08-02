@@ -77,6 +77,43 @@ export default function Events() {
     <section>
       <h2>Events</h2>
 
+      {events.length === 0 ? (
+        <p className="empty">Noch keine Events erfasst.</p>
+      ) : (
+        <ul className="list">
+          {events.map((ev) => (
+            <li key={ev.id} className="list-item">
+              <div className="list-item-main">
+                <strong>{ev.titel}</strong>
+                <span className={`badge status-${ev.status}`}>{ev.status}</span>
+              </div>
+              {ev.ort && <div className="list-item-meta">Ort: {ev.ort}</div>}
+              {ev.datum && <div className="list-item-meta">Datum: {formatDate(ev.datum)}</div>}
+              {ev.kontakt && <div className="list-item-meta">Kontakt: {ev.kontakt}</div>}
+              {ev.etappeId && (
+                <div className="list-item-meta">
+                  Etappe: {etappenListe.find((et) => String(et.id) === String(ev.etappeId))?.name || ev.etappeId}
+                </div>
+              )}
+              {ev.notiz && (
+                <div className="list-item-meta">
+                  <LinkedText text={ev.notiz} />
+                </div>
+              )}
+              <EntryLink url={ev.link} />
+              <div className="list-item-actions">
+                <button type="button" onClick={() => handleEdit(ev)}>
+                  Bearbeiten
+                </button>
+                <button type="button" className="delete" onClick={() => handleDelete(ev.id)}>
+                  Löschen
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <form className="form" onSubmit={handleSubmit}>
         <label>
           Titel
@@ -168,43 +205,6 @@ export default function Events() {
           </button>
         )}
       </form>
-
-      {events.length === 0 ? (
-        <p className="empty">Noch keine Events erfasst.</p>
-      ) : (
-        <ul className="list">
-          {events.map((ev) => (
-            <li key={ev.id} className="list-item">
-              <div className="list-item-main">
-                <strong>{ev.titel}</strong>
-                <span className={`badge status-${ev.status}`}>{ev.status}</span>
-              </div>
-              {ev.ort && <div className="list-item-meta">Ort: {ev.ort}</div>}
-              {ev.datum && <div className="list-item-meta">Datum: {formatDate(ev.datum)}</div>}
-              {ev.kontakt && <div className="list-item-meta">Kontakt: {ev.kontakt}</div>}
-              {ev.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(ev.etappeId))?.name || ev.etappeId}
-                </div>
-              )}
-              {ev.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={ev.notiz} />
-                </div>
-              )}
-              <EntryLink url={ev.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => handleEdit(ev)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(ev.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }
