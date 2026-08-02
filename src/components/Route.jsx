@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
 import { formatDate, sortByDate } from '../format'
+import { routenUrl, ortsUrl, karteEinbettenUrl } from '../maps'
 
 const STORAGE_KEY = 'urlaub-app.route'
 
@@ -60,8 +61,9 @@ export default function Route() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setEtappen((prev) => prev.filter((e) => e.id !== id))
+  function handleDelete(fahrt) {
+    if (!window.confirm(`Fahrt "${fahrt.von} → ${fahrt.nach}" wirklich löschen?`)) return
+    setEtappen((prev) => prev.filter((e) => e.id !== fahrt.id))
   }
 
   function handleEdit(fahrt) {
@@ -82,37 +84,68 @@ export default function Route() {
         <p className="empty">Noch keine Fahrten erfasst.</p>
       ) : (
         <ul className="list">
-          {sortierteFahrten.map((e, index) => (
-            <li key={e.id} className="list-item">
-              <div className="list-item-main">
-                <span className="badge">{index + 1}</span>
-                <strong>
-                  {e.von} → {e.nach}
-                </strong>
-              </div>
-              {e.datum && <div className="list-item-meta">Datum: {formatDate(e.datum)}</div>}
-              {e.distanz && <div className="list-item-meta">Distanz: {e.distanz}</div>}
-              {e.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(e.etappeId))?.name || e.etappeId}
+          {sortierteFahrten.map((e, index) => {
+            const route = routenUrl(e.von, e.nach)
+            const kartenUrl = karteEinbettenUrl(e.nach)
+            const zielUrl = ortsUrl(e.nach)
+
+            return (
+              <li key={e.id} className="list-item">
+                <div className="fahrt-layout">
+                  <div className="fahrt-inhalt">
+                    <div className="list-item-main">
+                      <span className="badge">{index + 1}</span>
+                      <strong>
+                        {e.von} → {e.nach}
+                      </strong>
+                    </div>
+                    {e.datum && <div className="list-item-meta">Datum: {formatDate(e.datum)}</div>}
+                    {e.distanz && <div className="list-item-meta">Distanz: {e.distanz}</div>}
+                    {e.etappeId && (
+                      <div className="list-item-meta">
+                        Etappe: {etappenListe.find((et) => String(et.id) === String(e.etappeId))?.name || e.etappeId}
+                      </div>
+                    )}
+                    {e.notiz && (
+                      <div className="list-item-meta">
+                        <LinkedText text={e.notiz} />
+                      </div>
+                    )}
+                    <EntryLink url={e.link} />
+                    {route && (
+                      <div className="list-item-meta">
+                        <a href={route} target="_blank" rel="noopener noreferrer">
+                          Route in Google Maps
+                        </a>
+                      </div>
+                    )}
+                    <div className="list-item-actions">
+                      <button type="button" onClick={() => handleEdit(e)}>
+                        Bearbeiten
+                      </button>
+                      <button type="button" className="delete" onClick={() => handleDelete(e)}>
+                        Löschen
+                      </button>
+                    </div>
+                  </div>
+
+                  {kartenUrl && (
+                    <div className="fahrt-karte">
+                      <iframe
+                        src={kartenUrl}
+                        title={`Karte ${e.nach}`}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      <a href={zielUrl} target="_blank" rel="noopener noreferrer">
+                        In Google Maps öffnen
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
-              {e.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={e.notiz} />
-                </div>
-              )}
-              <EntryLink url={e.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => handleEdit(e)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(e.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
 
