@@ -412,7 +412,7 @@ def publish(message: str = "Update Reisedaten") -> dict:
         return {
             "status": "fehler",
             "hinweis": (
-                f"git {cmd_text} Timeout nach {GIT_TIMEOUT_S}s — mutmasslich "
+                f"git {cmd_text} Timeout nach {GIT_TIMEOUT_S}s - mutmasslich "
                 f"Datei-/Netzblockade (pCloud?). Kein Schaden: data.json liegt "
                 f"lokal vor."
             ),
