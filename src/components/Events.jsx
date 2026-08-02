@@ -59,8 +59,9 @@ export default function Events() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setEvents((prev) => prev.filter((ev) => ev.id !== id))
+  function handleDelete(event) {
+    if (!window.confirm(`Event "${event.titel}" wirklich löschen?`)) return
+    setEvents((prev) => prev.filter((ev) => ev.id !== event.id))
   }
 
   function handleEdit(event) {
@@ -105,7 +106,7 @@ export default function Events() {
                 <button type="button" onClick={() => handleEdit(ev)}>
                   Bearbeiten
                 </button>
-                <button type="button" className="delete" onClick={() => handleDelete(ev.id)}>
+                <button type="button" className="delete" onClick={() => handleDelete(ev)}>
                   Löschen
                 </button>
               </div>
