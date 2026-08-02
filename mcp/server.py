@@ -135,17 +135,30 @@ def get_overview() -> dict:
 
 
 @mcp.tool()
-def add_etappe(name: str, vonDatum: str = "", bisDatum: str = "", notiz: str = "") -> dict:
+def add_etappe(
+    name: str,
+    vonDatum: str = "",
+    bisDatum: str = "",
+    notiz: str = "",
+    link: str = "",
+) -> dict:
     """Legt eine neue Reise-Etappe an (z.B. eine Stadt/ein Abschnitt).
 
     name ist Pflicht. vonDatum/bisDatum als ISO-Datum (YYYY-MM-DD) oder "".
+    link: optionale URL (z.B. Buchungsseite), leer = kein Link.
     """
     data = _load()
     try:
         entry = store.add_entry(
             data,
             "etappen",
-            {"name": name, "vonDatum": vonDatum, "bisDatum": bisDatum, "notiz": notiz},
+            {
+                "name": name,
+                "vonDatum": vonDatum,
+                "bisDatum": bisDatum,
+                "notiz": notiz,
+                "link": link,
+            },
         )
     except store.StoreError as exc:
         return {"status": "fehler", "hinweis": str(exc), "eintrag": None}
@@ -165,12 +178,14 @@ def add_buchung(
     checkIn: str = "",
     checkOut: str = "",
     notiz: str = "",
+    link: str = "",
     etappe: str = "",
 ) -> dict:
     """Legt eine Buchung an (Flug, Unterkunft, Mietwagen oder Transfer).
 
     typ muss einer von: Flug, Unterkunft, Mietwagen, Transfer sein.
     Bei typ=Unterkunft checkIn/checkOut nutzen, sonst datum.
+    link: optionale URL (z.B. Booking.com-Buchung), leer = kein Link.
     etappe: Name ODER id einer bestehenden Etappe; leer = keine Zuordnung.
     Ist die Etappe nicht eindeutig, wird nichts angelegt (Rueckfrage).
     """
@@ -183,6 +198,7 @@ def add_buchung(
             "checkIn": checkIn,
             "checkOut": checkOut,
             "notiz": notiz,
+            "link": link,
         },
         etappe,
     )
@@ -195,16 +211,25 @@ def add_fahrt(
     datum: str = "",
     distanz: str = "",
     notiz: str = "",
+    link: str = "",
     etappe: str = "",
 ) -> dict:
     """Legt einen Reiseroute-Abschnitt (eine Fahrt von A nach B) an.
 
     von/nach sind Pflicht. distanz als freier Text (z.B. '120 km').
+    link: optionale URL (z.B. Ticket/Fahrplan), leer = kein Link.
     etappe: Name ODER id einer bestehenden Etappe; leer = keine Zuordnung.
     """
     return _add_with_etappe(
         "route",
-        {"von": von, "nach": nach, "datum": datum, "distanz": distanz, "notiz": notiz},
+        {
+            "von": von,
+            "nach": nach,
+            "datum": datum,
+            "distanz": distanz,
+            "notiz": notiz,
+            "link": link,
+        },
         etappe,
     )
 
@@ -217,11 +242,13 @@ def add_event(
     kontakt: str = "",
     status: str = "geplant",
     notiz: str = "",
+    link: str = "",
     etappe: str = "",
 ) -> dict:
     """Legt ein Event/eine Aktivitaet an (z.B. Stadtfuehrung, Konzert).
 
     status: geplant oder gebucht.
+    link: optionale URL (z.B. Ticketshop), leer = kein Link.
     etappe: Name ODER id einer bestehenden Etappe; leer = keine Zuordnung.
     """
     return _add_with_etappe(
@@ -233,6 +260,7 @@ def add_event(
             "kontakt": kontakt,
             "status": status,
             "notiz": notiz,
+            "link": link,
         },
         etappe,
     )
@@ -246,12 +274,14 @@ def add_restaurant(
     reservierung: str = "",
     kontakt: str = "",
     notiz: str = "",
+    link: str = "",
     etappe: str = "",
 ) -> dict:
     """Legt ein Restaurant an.
 
     name ist Pflicht. kueche z.B. 'italienisch'. reservierung als freier
     Text (z.B. 'Tisch 20 Uhr' oder Datum).
+    link: optionale URL (z.B. Restaurant-Website), leer = kein Link.
     etappe: Name ODER id einer bestehenden Etappe; leer = keine Zuordnung.
     """
     return _add_with_etappe(
@@ -263,6 +293,7 @@ def add_restaurant(
             "reservierung": reservierung,
             "kontakt": kontakt,
             "notiz": notiz,
+            "link": link,
         },
         etappe,
     )
@@ -275,11 +306,13 @@ def add_sehenswuerdigkeit(
     kategorie: str = "",
     status: str = "geplant",
     notiz: str = "",
+    link: str = "",
     etappe: str = "",
 ) -> dict:
     """Legt eine Sehenswuerdigkeit an.
 
     status: geplant oder besucht. kategorie z.B. 'Museum', 'Kirche'.
+    link: optionale URL (z.B. Website/Tickets), leer = kein Link.
     etappe: Name ODER id einer bestehenden Etappe; leer = keine Zuordnung.
     """
     return _add_with_etappe(
@@ -290,6 +323,7 @@ def add_sehenswuerdigkeit(
             "kategorie": kategorie,
             "status": status,
             "notiz": notiz,
+            "link": link,
         },
         etappe,
     )
