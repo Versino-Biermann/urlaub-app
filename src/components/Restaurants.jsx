@@ -76,6 +76,45 @@ export default function Restaurants() {
     <section>
       <h2>Restaurants</h2>
 
+      {restaurants.length === 0 ? (
+        <p className="empty">Noch keine Restaurants erfasst.</p>
+      ) : (
+        <ul className="list">
+          {restaurants.map((r) => (
+            <li key={r.id} className="list-item">
+              <div className="list-item-main">
+                <strong>{r.name}</strong>
+                {r.kueche && <span className="badge">{r.kueche}</span>}
+              </div>
+              {r.ort && <div className="list-item-meta">Ort: {r.ort}</div>}
+              {r.reservierung && (
+                <div className="list-item-meta">Reservierung: {formatDate(r.reservierung)}</div>
+              )}
+              {r.kontakt && <div className="list-item-meta">Kontakt: {r.kontakt}</div>}
+              {r.etappeId && (
+                <div className="list-item-meta">
+                  Etappe: {etappenListe.find((et) => String(et.id) === String(r.etappeId))?.name || r.etappeId}
+                </div>
+              )}
+              {r.notiz && (
+                <div className="list-item-meta">
+                  <LinkedText text={r.notiz} />
+                </div>
+              )}
+              <EntryLink url={r.link} />
+              <div className="list-item-actions">
+                <button type="button" onClick={() => handleEdit(r)}>
+                  Bearbeiten
+                </button>
+                <button type="button" className="delete" onClick={() => handleDelete(r.id)}>
+                  Löschen
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <form className="form" onSubmit={handleSubmit}>
         <label>
           Name
@@ -167,45 +206,6 @@ export default function Restaurants() {
           </button>
         )}
       </form>
-
-      {restaurants.length === 0 ? (
-        <p className="empty">Noch keine Restaurants erfasst.</p>
-      ) : (
-        <ul className="list">
-          {restaurants.map((r) => (
-            <li key={r.id} className="list-item">
-              <div className="list-item-main">
-                <strong>{r.name}</strong>
-                {r.kueche && <span className="badge">{r.kueche}</span>}
-              </div>
-              {r.ort && <div className="list-item-meta">Ort: {r.ort}</div>}
-              {r.reservierung && (
-                <div className="list-item-meta">Reservierung: {formatDate(r.reservierung)}</div>
-              )}
-              {r.kontakt && <div className="list-item-meta">Kontakt: {r.kontakt}</div>}
-              {r.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(r.etappeId))?.name || r.etappeId}
-                </div>
-              )}
-              {r.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={r.notiz} />
-                </div>
-              )}
-              <EntryLink url={r.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => handleEdit(r)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(r.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }
