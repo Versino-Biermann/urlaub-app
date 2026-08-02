@@ -1,4 +1,4 @@
-# Urlaub-App
+# La Grande Virée
 
 Web-basierter Urlaubs-Begleiter (Grundgerüst). Erfasst und speichert:
 

@@ -80,7 +80,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Urlaub-App</h1>
+        <h1>La Grande Virée</h1>
         <Navigation current={current} onChange={setCurrent} />
         <DataBackup />
       </header>
