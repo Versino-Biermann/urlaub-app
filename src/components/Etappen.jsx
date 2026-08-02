@@ -101,8 +101,9 @@ export default function Etappen() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setEtappen((prev) => prev.filter((e) => e.id !== id))
+  function handleDelete(etappe) {
+    if (!window.confirm(`Etappe "${etappe.name}" wirklich löschen?`)) return
+    setEtappen((prev) => prev.filter((e) => e.id !== etappe.id))
   }
 
   function handleEdit(etappe) {
@@ -225,7 +226,7 @@ export default function Etappen() {
                   <button type="button" onClick={() => handleEdit(etappe)}>
                     Bearbeiten
                   </button>
-                  <button type="button" className="delete" onClick={() => handleDelete(etappe.id)}>
+                  <button type="button" className="delete" onClick={() => handleDelete(etappe)}>
                     Löschen
                   </button>
                 </div>
