@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
+import { formatDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.route'
 
@@ -13,7 +15,7 @@ function loadEtappen() {
 }
 
 function emptyForm() {
-  return { von: '', nach: '', datum: '', distanz: '', notiz: '', etappeId: '' }
+  return { von: '', nach: '', datum: '', distanz: '', notiz: '', link: '', etappeId: '' }
 }
 
 function loadEtappenListe() {
@@ -126,6 +128,17 @@ export default function Route() {
         </label>
 
         <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <label>
           Etappe
           <select name="etappeId" value={form.etappeId} onChange={handleChange}>
             <option value="">— keine —</option>
@@ -157,7 +170,7 @@ export default function Route() {
                   {e.von} → {e.nach}
                 </strong>
               </div>
-              {e.datum && <div className="list-item-meta">Datum: {e.datum}</div>}
+              {e.datum && <div className="list-item-meta">Datum: {formatDate(e.datum)}</div>}
               {e.distanz && <div className="list-item-meta">Distanz: {e.distanz} km</div>}
               {e.etappeId && (
                 <div className="list-item-meta">
@@ -169,6 +182,7 @@ export default function Route() {
                   <LinkedText text={e.notiz} />
                 </div>
               )}
+              <EntryLink url={e.link} />
               <div className="list-item-actions">
                 <button type="button" onClick={() => handleEdit(e)}>
                   Bearbeiten
