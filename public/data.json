@@ -1,7 +1,7 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-08-02T19:56:00Z",
+  "updatedAt": "2026-08-02T20:24:00Z",
   "data": {
     "etappen": [
       {
@@ -9,49 +9,56 @@
         "name": "Reims",
         "vonDatum": "2026-08-29",
         "bisDatum": "2026-08-30",
-        "notiz": ""
+        "notiz": "",
+        "link": "https://de.wikipedia.org/wiki/Reims"
       },
       {
         "id": "b77d2bb2c2b0453ab22612c7b3b7c538",
         "name": "Rouen",
         "vonDatum": "2026-08-30",
         "bisDatum": "2026-08-31",
-        "notiz": ""
+        "notiz": "",
+        "link": "https://de.wikipedia.org/wiki/Rouen"
       },
       {
         "id": "cb870eafd75248fb82a6c301cc34e94a",
         "name": "Honfleur",
         "vonDatum": "2026-08-31",
         "bisDatum": "2026-09-01",
-        "notiz": ""
+        "notiz": "",
+        "link": "https://de.wikipedia.org/wiki/Honfleur"
       },
       {
         "id": "eef5e8b89ee34310a1e5475d89ac4fc3",
         "name": "Ploubazlanec (Bretagne)",
         "vonDatum": "2026-09-05",
         "bisDatum": "2026-09-12",
-        "notiz": "Hauptetappe: 7 Nächte Ferienhaus am kleinen Hafen, nahe Paimpol."
+        "notiz": "Hauptetappe: 7 Nächte Ferienhaus am kleinen Hafen, nahe Paimpol.",
+        "link": "https://de.wikipedia.org/wiki/Ploubazlanec"
       },
       {
         "id": "f1ef22ee4b44421593fb7480de1262af",
         "name": "Rennes",
         "vonDatum": "2026-09-01",
         "bisDatum": "2026-09-03",
-        "notiz": ""
+        "notiz": "",
+        "link": "https://de.wikipedia.org/wiki/Rennes"
       },
       {
         "id": "69e7bdd9f9954040a1cf3a271a68cd3e",
         "name": "Saint-Malo",
         "vonDatum": "2026-09-03",
         "bisDatum": "2026-09-05",
-        "notiz": ""
+        "notiz": "",
+        "link": "https://de.wikipedia.org/wiki/Saint-Malo"
       },
       {
         "id": "2dc059fcc59d426da898a8064a51e87a",
         "name": "Troyes",
         "vonDatum": "2026-09-12",
         "bisDatum": "2026-09-13",
-        "notiz": "Rückreise-Zwischenstopp Ploubazlanec → Ulm. Fachwerk-Altstadt, Kathedrale, Champagne-Küche."
+        "notiz": "Rückreise-Zwischenstopp Ploubazlanec → Ulm. Fachwerk-Altstadt, Kathedrale, Champagne-Küche.",
+        "link": "https://de.wikipedia.org/wiki/Troyes"
       }
     ],
     "bookings": [
