@@ -1,7 +1,7 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-08-02T14:39:01Z",
+  "updatedAt": "2026-08-02T15:52:03Z",
   "data": {
     "etappen": [
       {
@@ -126,7 +126,80 @@
         "etappeId": "2dc059fcc59d426da898a8064a51e87a"
       }
     ],
-    "route": [],
+    "route": [
+      {
+        "id": "398335541fd64351bed03aaabe6eebdf",
+        "von": "Ulm",
+        "nach": "Reims",
+        "datum": "2026-08-29",
+        "distanz": "ca. 590 km",
+        "notiz": "Anreise-Tag 1",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": "d90379e366ce49b0aca3ae64dd044e62",
+        "von": "Reims",
+        "nach": "Rouen",
+        "datum": "2026-08-30",
+        "distanz": "ca. 280 km",
+        "notiz": "",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": "83bddd27e68e4e6b8a99ccd2cdcb269b",
+        "von": "Rouen",
+        "nach": "Honfleur",
+        "datum": "2026-08-31",
+        "distanz": "ca. 90 km",
+        "notiz": "",
+        "etappeId": "cb870eafd75248fb82a6c301cc34e94a"
+      },
+      {
+        "id": "b832798a48804489b4daa0adc9f5c850",
+        "von": "Honfleur",
+        "nach": "Rennes",
+        "datum": "2026-09-01",
+        "distanz": "ca. 230 km",
+        "notiz": "",
+        "etappeId": "f1ef22ee4b44421593fb7480de1262af"
+      },
+      {
+        "id": "1e6e0630b0d948dfb437f8cbf5ae22f1",
+        "von": "Rennes",
+        "nach": "Saint-Malo",
+        "datum": "2026-09-03",
+        "distanz": "ca. 70 km",
+        "notiz": "",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": "6e86df6eac394bb6bb524e3f58cf6416",
+        "von": "Saint-Malo",
+        "nach": "Ploubazlanec",
+        "datum": "2026-09-05",
+        "distanz": "ca. 115 km",
+        "notiz": "Check-in Ferienhaus ab 14:00",
+        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
+      },
+      {
+        "id": "371dcf599684419980c609d7c6f48568",
+        "von": "Ploubazlanec",
+        "nach": "Troyes",
+        "datum": "2026-09-12",
+        "distanz": "ca. 620 km",
+        "notiz": "Rückreise-Tag 1, Check-out bis 10:00",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      },
+      {
+        "id": "27e66aee03154fd28358977577c18413",
+        "von": "Troyes",
+        "nach": "Ulm",
+        "datum": "2026-09-13",
+        "distanz": "ca. 545 km",
+        "notiz": "Rückreise-Tag 2, Heimfahrt",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      }
+    ],
     "sightseeing": [],
     "events": [],
     "restaurants": []
