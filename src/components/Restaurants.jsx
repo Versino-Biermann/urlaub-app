@@ -58,8 +58,9 @@ export default function Restaurants() {
     setForm(emptyForm())
   }
 
-  function handleDelete(id) {
-    setRestaurants((prev) => prev.filter((r) => r.id !== id))
+  function handleDelete(restaurant) {
+    if (!window.confirm(`Restaurant "${restaurant.name}" wirklich löschen?`)) return
+    setRestaurants((prev) => prev.filter((r) => r.id !== restaurant.id))
   }
 
   function handleEdit(restaurant) {
@@ -106,7 +107,7 @@ export default function Restaurants() {
                 <button type="button" onClick={() => handleEdit(r)}>
                   Bearbeiten
                 </button>
-                <button type="button" className="delete" onClick={() => handleDelete(r.id)}>
+                <button type="button" className="delete" onClick={() => handleDelete(r)}>
                   Löschen
                 </button>
               </div>
