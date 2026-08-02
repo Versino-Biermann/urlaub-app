@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
+import { formatDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.events'
 const STATUS = ['geplant', 'gebucht']
@@ -14,7 +16,7 @@ function loadEvents() {
 }
 
 function emptyForm() {
-  return { titel: '', datum: '', ort: '', kontakt: '', status: STATUS[0], notiz: '', etappeId: '' }
+  return { titel: '', datum: '', ort: '', kontakt: '', status: STATUS[0], notiz: '', link: '', etappeId: '' }
 }
 
 function loadEtappenListe() {
@@ -137,6 +139,17 @@ export default function Events() {
         </label>
 
         <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <label>
           Etappe
           <select name="etappeId" value={form.etappeId} onChange={handleChange}>
             <option value="">— keine —</option>
@@ -167,7 +180,7 @@ export default function Events() {
                 <span className={`badge status-${ev.status}`}>{ev.status}</span>
               </div>
               {ev.ort && <div className="list-item-meta">Ort: {ev.ort}</div>}
-              {ev.datum && <div className="list-item-meta">Datum: {ev.datum}</div>}
+              {ev.datum && <div className="list-item-meta">Datum: {formatDate(ev.datum)}</div>}
               {ev.kontakt && <div className="list-item-meta">Kontakt: {ev.kontakt}</div>}
               {ev.etappeId && (
                 <div className="list-item-meta">
@@ -179,6 +192,7 @@ export default function Events() {
                   <LinkedText text={ev.notiz} />
                 </div>
               )}
+              <EntryLink url={ev.link} />
               <div className="list-item-actions">
                 <button type="button" onClick={() => handleEdit(ev)}>
                   Bearbeiten
