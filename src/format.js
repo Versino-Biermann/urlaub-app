@@ -29,9 +29,16 @@ export function linkLabel(url) {
 /**
  * href-Wert fuer eine gespeicherte URL. Fehlt das Schema, wird https://
  * ergaenzt - sonst wuerde der Browser den Wert als relativen Pfad deuten.
+ *
+ * Sicherheit: Es werden ausschliesslich http/https als Ziel zugelassen
+ * (Allowlist). Alles andere - insbesondere javascript: und data: - ergibt ""
+ * und wird von EntryLink gar nicht gerendert. Der gespeicherte Wert bleibt
+ * unveraendert; gefiltert wird nur bei der Anzeige.
  */
 export function linkHref(url) {
   const text = String(url || '').trim()
   if (!text) return ''
-  return /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`
+  const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(text)
+  const kandidat = hasScheme ? text : `https://${text}`
+  return /^https?:\/\//i.test(kandidat) ? kandidat : ''
 }
