@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
+import EntryLink from './EntryLink'
+import { formatDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.bookings'
 const TYPES = ['Flug', 'Unterkunft', 'Mietwagen', 'Transfer']
@@ -14,7 +16,7 @@ function loadBookings() {
 }
 
 function emptyForm() {
-  return { titel: '', typ: TYPES[0], datum: '', checkIn: '', checkOut: '', notiz: '', etappeId: '' }
+  return { titel: '', typ: TYPES[0], datum: '', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' }
 }
 
 function loadEtappenListe() {
@@ -129,6 +131,17 @@ export default function Bookings() {
         </label>
 
         <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <label>
           Etappe
           <select name="etappeId" value={form.etappeId} onChange={handleChange}>
             <option value="">— keine —</option>
@@ -160,11 +173,11 @@ export default function Bookings() {
               </div>
               {b.typ === 'Unterkunft' ? (
                 <>
-                  {b.checkIn && <div className="list-item-meta">Check-in: {b.checkIn}</div>}
-                  {b.checkOut && <div className="list-item-meta">Check-out: {b.checkOut}</div>}
+                  {b.checkIn && <div className="list-item-meta">Check-in: {formatDate(b.checkIn)}</div>}
+                  {b.checkOut && <div className="list-item-meta">Check-out: {formatDate(b.checkOut)}</div>}
                 </>
               ) : (
-                b.datum && <div className="list-item-meta">Datum: {b.datum}</div>
+                b.datum && <div className="list-item-meta">Datum: {formatDate(b.datum)}</div>
               )}
               {b.etappeId && (
                 <div className="list-item-meta">
@@ -176,6 +189,7 @@ export default function Bookings() {
                   <LinkedText text={b.notiz} />
                 </div>
               )}
+              <EntryLink url={b.link} />
               <div className="list-item-actions">
                 <button type="button" onClick={() => handleEdit(b)}>
                   Bearbeiten
