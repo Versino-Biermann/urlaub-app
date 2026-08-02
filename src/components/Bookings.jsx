@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
-import { formatDate } from '../format'
+import { formatDate, sortByDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.bookings'
 const TYPES = ['Flug', 'Unterkunft', 'Mietwagen', 'Transfer']
@@ -33,6 +33,9 @@ export default function Bookings() {
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const etappenListe = loadEtappenListe()
+  // Nur die Anzeige-Reihenfolge: chronologisch entlang der Reise.
+  // Unterkuenfte haengen an checkIn, alles andere an datum.
+  const sortierteBookings = sortByDate(bookings, (b) => b.checkIn || b.datum)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings))
@@ -76,6 +79,48 @@ export default function Bookings() {
   return (
     <section>
       <h2>Buchungen</h2>
+
+      {bookings.length === 0 ? (
+        <p className="empty">Noch keine Buchungen erfasst.</p>
+      ) : (
+        <ul className="list">
+          {sortierteBookings.map((b) => (
+            <li key={b.id} className="list-item">
+              <div className="list-item-main">
+                <strong>{b.titel}</strong>
+                <span className="badge">{b.typ}</span>
+              </div>
+              {b.typ === 'Unterkunft' ? (
+                <>
+                  {b.checkIn && <div className="list-item-meta">Check-in: {formatDate(b.checkIn)}</div>}
+                  {b.checkOut && <div className="list-item-meta">Check-out: {formatDate(b.checkOut)}</div>}
+                </>
+              ) : (
+                b.datum && <div className="list-item-meta">Datum: {formatDate(b.datum)}</div>
+              )}
+              {b.etappeId && (
+                <div className="list-item-meta">
+                  Etappe: {etappenListe.find((et) => String(et.id) === String(b.etappeId))?.name || b.etappeId}
+                </div>
+              )}
+              {b.notiz && (
+                <div className="list-item-meta">
+                  <LinkedText text={b.notiz} />
+                </div>
+              )}
+              <EntryLink url={b.link} />
+              <div className="list-item-actions">
+                <button type="button" onClick={() => handleEdit(b)}>
+                  Bearbeiten
+                </button>
+                <button type="button" className="delete" onClick={() => handleDelete(b.id)}>
+                  Löschen
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <form className="form" onSubmit={handleSubmit}>
         <label>
@@ -160,48 +205,6 @@ export default function Bookings() {
           </button>
         )}
       </form>
-
-      {bookings.length === 0 ? (
-        <p className="empty">Noch keine Buchungen erfasst.</p>
-      ) : (
-        <ul className="list">
-          {bookings.map((b) => (
-            <li key={b.id} className="list-item">
-              <div className="list-item-main">
-                <strong>{b.titel}</strong>
-                <span className="badge">{b.typ}</span>
-              </div>
-              {b.typ === 'Unterkunft' ? (
-                <>
-                  {b.checkIn && <div className="list-item-meta">Check-in: {formatDate(b.checkIn)}</div>}
-                  {b.checkOut && <div className="list-item-meta">Check-out: {formatDate(b.checkOut)}</div>}
-                </>
-              ) : (
-                b.datum && <div className="list-item-meta">Datum: {formatDate(b.datum)}</div>
-              )}
-              {b.etappeId && (
-                <div className="list-item-meta">
-                  Etappe: {etappenListe.find((et) => String(et.id) === String(b.etappeId))?.name || b.etappeId}
-                </div>
-              )}
-              {b.notiz && (
-                <div className="list-item-meta">
-                  <LinkedText text={b.notiz} />
-                </div>
-              )}
-              <EntryLink url={b.link} />
-              <div className="list-item-actions">
-                <button type="button" onClick={() => handleEdit(b)}>
-                  Bearbeiten
-                </button>
-                <button type="button" className="delete" onClick={() => handleDelete(b.id)}>
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }
