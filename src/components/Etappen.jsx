@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
-import { formatDate } from '../format'
+import { formatDate, sortByDate } from '../format'
 
 const STORAGE_KEY = 'urlaub-app.etappen'
 
@@ -77,6 +77,8 @@ export default function Etappen() {
   const sightseeing = loadSightseeing()
   const events = loadEvents()
   const restaurants = loadRestaurants()
+  // Nur die Anzeige-Reihenfolge: chronologisch nach Start der Etappe.
+  const sortierteEtappen = sortByDate(etappen, (e) => e.vonDatum)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -117,63 +119,11 @@ export default function Etappen() {
     <section>
       <h2>Etappen</h2>
 
-      <form className="form" onSubmit={handleSubmit}>
-        <label>
-          Stadt/Abschnitt
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="z.B. München"
-            required
-          />
-        </label>
-
-        <label>
-          Von
-          <input type="date" name="vonDatum" value={form.vonDatum} onChange={handleChange} />
-        </label>
-
-        <label>
-          Bis
-          <input type="date" name="bisDatum" value={form.bisDatum} onChange={handleChange} />
-        </label>
-
-        <label>
-          Notiz
-          <textarea
-            name="notiz"
-            value={form.notiz}
-            onChange={handleChange}
-            placeholder="Optionale Notiz"
-          />
-        </label>
-
-        <label>
-          Link (URL)
-          <input
-            type="url"
-            name="link"
-            value={form.link}
-            onChange={handleChange}
-            placeholder="z.B. https://www.booking.com/…"
-          />
-        </label>
-
-        <button type="submit">{editId !== null ? 'Änderungen speichern' : 'Etappe hinzufügen'}</button>
-        {editId !== null && (
-          <button type="button" onClick={handleCancelEdit}>
-            Abbrechen
-          </button>
-        )}
-      </form>
-
       {etappen.length === 0 ? (
         <p className="empty">Noch keine Etappen erfasst.</p>
       ) : (
         <ul className="list">
-          {etappen.map((etappe) => {
+          {sortierteEtappen.map((etappe) => {
             const zugeordneteFahrten = fahrten.filter(
               (f) => String(f.etappeId) === String(etappe.id),
             )
@@ -284,6 +234,58 @@ export default function Etappen() {
           })}
         </ul>
       )}
+
+      <form className="form" onSubmit={handleSubmit}>
+        <label>
+          Stadt/Abschnitt
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="z.B. München"
+            required
+          />
+        </label>
+
+        <label>
+          Von
+          <input type="date" name="vonDatum" value={form.vonDatum} onChange={handleChange} />
+        </label>
+
+        <label>
+          Bis
+          <input type="date" name="bisDatum" value={form.bisDatum} onChange={handleChange} />
+        </label>
+
+        <label>
+          Notiz
+          <textarea
+            name="notiz"
+            value={form.notiz}
+            onChange={handleChange}
+            placeholder="Optionale Notiz"
+          />
+        </label>
+
+        <label>
+          Link (URL)
+          <input
+            type="url"
+            name="link"
+            value={form.link}
+            onChange={handleChange}
+            placeholder="z.B. https://www.booking.com/…"
+          />
+        </label>
+
+        <button type="submit">{editId !== null ? 'Änderungen speichern' : 'Etappe hinzufügen'}</button>
+        {editId !== null && (
+          <button type="button" onClick={handleCancelEdit}>
+            Abbrechen
+          </button>
+        )}
+      </form>
     </section>
   )
 }
