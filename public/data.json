@@ -1,10 +1,131 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-07-24T15:12:46Z",
+  "updatedAt": "2026-08-02T14:39:01Z",
   "data": {
-    "etappen": [],
-    "bookings": [],
+    "etappen": [
+      {
+        "id": "34a06534bd5f4efd8c4be05b084c0052",
+        "name": "Reims",
+        "vonDatum": "2026-08-29",
+        "bisDatum": "2026-08-30",
+        "notiz": ""
+      },
+      {
+        "id": "b77d2bb2c2b0453ab22612c7b3b7c538",
+        "name": "Rouen",
+        "vonDatum": "2026-08-30",
+        "bisDatum": "2026-08-31",
+        "notiz": ""
+      },
+      {
+        "id": "cb870eafd75248fb82a6c301cc34e94a",
+        "name": "Honfleur",
+        "vonDatum": "2026-08-31",
+        "bisDatum": "2026-09-01",
+        "notiz": ""
+      },
+      {
+        "id": "eef5e8b89ee34310a1e5475d89ac4fc3",
+        "name": "Ploubazlanec (Bretagne)",
+        "vonDatum": "2026-09-05",
+        "bisDatum": "2026-09-12",
+        "notiz": "Hauptetappe: 7 Nächte Ferienhaus am kleinen Hafen, nahe Paimpol."
+      },
+      {
+        "id": "f1ef22ee4b44421593fb7480de1262af",
+        "name": "Rennes",
+        "vonDatum": "2026-09-01",
+        "bisDatum": "2026-09-03",
+        "notiz": ""
+      },
+      {
+        "id": "69e7bdd9f9954040a1cf3a271a68cd3e",
+        "name": "Saint-Malo",
+        "vonDatum": "2026-09-03",
+        "bisDatum": "2026-09-05",
+        "notiz": ""
+      },
+      {
+        "id": "2dc059fcc59d426da898a8064a51e87a",
+        "name": "Troyes",
+        "vonDatum": "2026-09-12",
+        "bisDatum": "2026-09-13",
+        "notiz": "Rückreise-Zwischenstopp Ploubazlanec → Ulm. Fachwerk-Altstadt, Kathedrale, Champagne-Küche."
+      }
+    ],
+    "bookings": [
+      {
+        "id": "f7d89873e83b4338a74254418b31df63",
+        "titel": "Quality Aparthotel Reims - Les Capucins",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-08-29",
+        "checkOut": "2026-08-30",
+        "notiz": "Booking.com Bestätigungsnr. 5240716282. 1 Nacht, Studio, 2 Erwachsene. Gesamtpreis 66,34 € (keine Vorauszahlung). Kostenlos stornierbar bis 29.08.2026 16:00. Check-in ab 15:00, Check-out bis 11:00. Adresse: 140 rue des Capucins, 51100 Reims. Tel. +33 3 26 49 30 00. Frühstück optional 12,90 €/Person/Nacht.",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": "0c742c7e887c49a2a72b0bf728432f8e",
+        "titel": "ibis Rouen Centre Champ de Mars",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-08-30",
+        "checkOut": "2026-08-31",
+        "notiz": "Booking.com. 1 Nacht, Standard Doppelzimmer, 2 Erwachsene. Gesamtpreis 82,30 € (davon Übernachtungssteuer 3,30 € direkt vor Ort). Keine Vorauszahlung, per Kreditkarte garantiert. Kostenlos stornierbar bis 29.08.2026 23:59. Check-in 15:00–23:30, Check-out bis 11:30. Adresse: 12 Avenue Aristide Briand, 76000 Rouen. Tel. +33 2 35 08 12 11. Frühstück optional 17,90 €/Person.",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": "e7ca9b8f45c14500a151a817faa0f94b",
+        "titel": "Les Cascades - Hôtel de Charme",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-08-31",
+        "checkOut": "2026-09-01",
+        "notiz": "Booking.com Buchungsnr. 5433365041. UMGEBUCHT am 02.08.2026 (vorher 01.–02.09.). 1 Nacht, Doppelzimmer, 2 Erwachsene. Gesamtpreis 117,72 €. Check-in 31.08. 16:00–21:00, Check-out bis 11:00. Adresse: 19 cours des fosses, 14600 Honfleur. Tel. +33 2 31 89 05 83. Frühstück optional 11,50 €/Person.",
+        "etappeId": "cb870eafd75248fb82a6c301cc34e94a"
+      },
+      {
+        "id": "0311f4d9c68944788fda54a82ef24fd8",
+        "titel": "Ferienhaus „Charming house with sea view\" Ploubazlanec",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-09-05",
+        "checkOut": "2026-09-12",
+        "notiz": "FeWo-direkt, Reservierungsnr. HA-7GNZ7H. 7 Nächte, 2 Erwachsene, Haus mit Meerblick am kleinen Hafen. Gesamtpreis 732,57 € — bereits vollständig bezahlt. Check-in 05.09. ab 14:00, Check-out 12.09. bis 10:00. Adresse: 8 Rue de la Jetée, 22620 Ploubazlanec.",
+        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
+      },
+      {
+        "id": "fb0a7f2407d043ae80af5d7fc8003493",
+        "titel": "KastellRen - Rennes - Grand parking privé",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-09-01",
+        "checkOut": "2026-09-03",
+        "notiz": "Booking.com. 2 Nächte, Superior Doppelzimmer, 2 Erwachsene. Gesamtpreis 213,97 €, Frühstück inbegriffen. Kostenlos stornierbar bis 30.08.2026 23:59. Check-in 01.09. 17:00–22:30, Check-out 03.09. 06:00–10:00. Großer Privatparkplatz. Adresse: 4 Chemin du Bois Harel, 35200 Rennes. Tel. +33 7 49 46 05 71.",
+        "etappeId": "f1ef22ee4b44421593fb7480de1262af"
+      },
+      {
+        "id": "b87074be8dc84aea982184ef81061cb5",
+        "titel": "Frida - Plage 50m - Rue gratuite (Apartment Saint-Malo)",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-09-03",
+        "checkOut": "2026-09-05",
+        "notiz": "Booking.com Buchungsnr. 5827.522.653. 2 Nächte, Apartment mit 1 Schlafzimmer, 2 Erwachsene. Gesamtpreis 248,09 € (inkl. 39 € Reinigung). Kostenlos stornierbar bis 28.08.2026 23:59. Check-in 03.09. ab 16:00, Check-out 05.09. bis 11:00. Adresse: 14 Rue de la Cité, Saint-Servan, 35400 Saint-Malo (GPS N 048° 38.145, W 02° 1.539). Tel. +33 7 85 58 20 75. Küche vorhanden, keine Mahlzeiten inbegriffen. Kostenlose öffentliche Parkplätze in der Nähe, WLAN gratis. Strand 50 m.",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": "daa3e9e507f844978bbcacf8107e3801",
+        "titel": "Brit Hotel Privilège Le Royal - Centre Gare (Troyes)",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-09-12",
+        "checkOut": "2026-09-13",
+        "notiz": "Booking.com Buchungsnr. 6578.589.291. 1 Nacht, Comfort Doppel-/Zweibettzimmer, 2 Erwachsene. Preis 85,80 € + Übernachtungssteuer 2,64 € = Endpreis 88,44 €, zahlbar an die Unterkunft (Anzahlung wird 24 Std. vor Anreise abgebucht). Kostenlos stornierbar bis 10.09.2026 23:59. Check-in 12.09. 16:00–20:00, Check-out 13.09. 07:00–11:00. Adresse: 22 boulevard Carnot, 10000 Troyes (GPS N 048° 17.750, E 04° 4.013). Tel. +33 3 25 73 19 99. Private Parkplätze in der Nähe: 8,50 €/Tag, Reservierung erforderlich. WLAN gratis. Keine Mahlzeiten inbegriffen.",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      }
+    ],
     "route": [],
     "sightseeing": [],
     "events": [],
