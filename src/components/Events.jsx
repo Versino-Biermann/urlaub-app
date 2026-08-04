@@ -28,11 +28,23 @@ function loadEtappenListe() {
   }
 }
 
+const OHNE_ETAPPE = '__ohne-etappe__'
+
+function matchesEtappeFilter(eintrag, filter) {
+  if (!filter) return true
+  if (filter === OHNE_ETAPPE) {
+    return eintrag.etappeId === undefined || eintrag.etappeId === null || eintrag.etappeId === ''
+  }
+  return String(eintrag.etappeId) === String(filter)
+}
+
 export default function Events() {
   const [events, setEvents] = useState(loadEvents)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
+  const [etappeFilter, setEtappeFilter] = useState('')
   const etappenListe = loadEtappenListe()
+  const gefilterteEvents = events.filter((ev) => matchesEtappeFilter(ev, etappeFilter))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
@@ -78,11 +90,32 @@ export default function Events() {
     <section>
       <h2>Events</h2>
 
+      {etappenListe.length > 0 && (
+        <div className="list-filter">
+          <label htmlFor="events-etappe-filter">Etappe</label>
+          <select
+            id="events-etappe-filter"
+            value={etappeFilter}
+            onChange={(e) => setEtappeFilter(e.target.value)}
+          >
+            <option value="">Alle Etappen</option>
+            {etappenListe.map((etappe) => (
+              <option key={etappe.id} value={etappe.id}>
+                {etappe.name}
+              </option>
+            ))}
+            <option value={OHNE_ETAPPE}>Ohne Etappe</option>
+          </select>
+        </div>
+      )}
+
       {events.length === 0 ? (
         <p className="empty">Noch keine Events erfasst.</p>
+      ) : gefilterteEvents.length === 0 ? (
+        <p className="empty">Keine Events für diese Etappe.</p>
       ) : (
         <ul className="list">
-          {events.map((ev) => (
+          {gefilterteEvents.map((ev) => (
             <li key={ev.id} className="list-item">
               <div className="list-item-main">
                 <strong>{ev.titel}</strong>
