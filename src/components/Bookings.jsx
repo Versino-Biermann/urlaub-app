@@ -28,14 +28,26 @@ function loadEtappenListe() {
   }
 }
 
+const OHNE_ETAPPE = '__ohne-etappe__'
+
+function matchesEtappeFilter(eintrag, filter) {
+  if (!filter) return true
+  if (filter === OHNE_ETAPPE) {
+    return eintrag.etappeId === undefined || eintrag.etappeId === null || eintrag.etappeId === ''
+  }
+  return String(eintrag.etappeId) === String(filter)
+}
+
 export default function Bookings() {
   const [bookings, setBookings] = useState(loadBookings)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
+  const [etappeFilter, setEtappeFilter] = useState('')
   const etappenListe = loadEtappenListe()
   // Nur die Anzeige-Reihenfolge: chronologisch entlang der Reise.
   // Unterkuenfte haengen an checkIn, alles andere an datum.
   const sortierteBookings = sortByDate(bookings, (b) => b.checkIn || b.datum)
+  const gefilterteBookings = sortierteBookings.filter((b) => matchesEtappeFilter(b, etappeFilter))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings))
@@ -81,11 +93,32 @@ export default function Bookings() {
     <section>
       <h2>Buchungen</h2>
 
+      {etappenListe.length > 0 && (
+        <div className="list-filter">
+          <label htmlFor="bookings-etappe-filter">Etappe</label>
+          <select
+            id="bookings-etappe-filter"
+            value={etappeFilter}
+            onChange={(e) => setEtappeFilter(e.target.value)}
+          >
+            <option value="">Alle Etappen</option>
+            {etappenListe.map((etappe) => (
+              <option key={etappe.id} value={etappe.id}>
+                {etappe.name}
+              </option>
+            ))}
+            <option value={OHNE_ETAPPE}>Ohne Etappe</option>
+          </select>
+        </div>
+      )}
+
       {bookings.length === 0 ? (
         <p className="empty">Noch keine Buchungen erfasst.</p>
+      ) : gefilterteBookings.length === 0 ? (
+        <p className="empty">Keine Buchungen für diese Etappe.</p>
       ) : (
         <ul className="list">
-          {sortierteBookings.map((b) => (
+          {gefilterteBookings.map((b) => (
             <li key={b.id} className="list-item">
               <div className="list-item-main">
                 <strong>{b.titel}</strong>
