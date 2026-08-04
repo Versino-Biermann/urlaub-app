@@ -214,7 +214,53 @@
       }
     ],
     "sightseeing": [],
-    "events": [],
-    "restaurants": []
+    "events": [
+      {
+        "id": 1785834080383,
+        "titel": "Audio-Rundgang „Reims an einem Tag“",
+        "datum": "2026-08-30",
+        "ort": "",
+        "kontakt": "",
+        "status": "geplant",
+        "notiz": "Kathedrale Notre-Dame & Altstadt: Die App CityAppTour bietet den Audio-Rundgang „Reims an einem Tag“ komplett auf Deutsch an (ca. 2–3 Std.). Der Weg führt von der imposanten Krönungskathedrale über das Palais du Tau bis zur Basilika Saint-Remi.",
+        "link": "https://cityapptour.com/de/frankreich/reims/reims-an-einem-tag",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": 1785836593596,
+        "titel": "Audio-Guide: \"Fachwerk-Altstadt & Jeanne d’Arc\"",
+        "datum": "2026-08-31",
+        "ort": "Rouen",
+        "kontakt": "",
+        "status": "geplant",
+        "notiz": "Im offiziellen Tourismusbüro (direkt gegenüber der Kathedrale) können Sie physische Audioguides auf Deutsch ausleihen (ca. 2-stündige Route). Der Weg führt vorbei am Astronomischen Uhrwerk (Gros-Horloge), den mittelalterlichen Fachwerkhäusern bis zum Platz der Hinrichtung von Jeanne d’Arc.",
+        "link": "https://de.visiterouen.com",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      }
+    ],
+    "restaurants": [
+      {
+        "id": 1785836119423,
+        "name": "Brasserie Le Boulingrin",
+        "ort": "Reimes",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "Klassische, traditionsreiche Brasserie ohne Schickimicki. Perfekt für ein ehrliches regionales Gericht (z. B. Andouillette de Troyes oder frischen Fisch) und ein entspanntes Glas Champagner von lokalen Winzern.",
+        "link": "https://www.tripadvisor.de/Restaurant_Review-g187137-d1523227-Reviews-La_Brasserie_du_Boulingrin-Reims_Marne_Grand_Est.html",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": 1785837383556,
+        "name": "Fromagerie Bar Bickett",
+        "ort": "Rouen",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "Eine unumgängliche Adresse für Käseliebhaber in Rouen. Dieser in der Gegend noch einzigartige Ort vereint eine Molkerei, eine Käserei und eine Käsebar. Der ehemalige Informatiker Emmanuel Fournier, der zum Käser umgeschult hat, eröffnete dieses charmante Lokal im Mai 2024. Als großer Liebhaber des Genres bietet er eine ganze Auswahl an französischen, italienischen und spanischen Käsesorten an, die manchmal nirgendwo anders zu finden sind. Vor Ort kann man auch Käse- und Wurstplatten sowie Mittagsangebote probieren. Ein besonderer Ort, ideal für einen Afterwork-Gourmetabend!",
+        "link": "https://www.instagram.com/fromageriebarbickett/?hl=de",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      }
+    ]
   }
 }
