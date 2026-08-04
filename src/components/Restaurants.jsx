@@ -27,11 +27,23 @@ function loadEtappenListe() {
   }
 }
 
+const OHNE_ETAPPE = '__ohne-etappe__'
+
+function matchesEtappeFilter(eintrag, filter) {
+  if (!filter) return true
+  if (filter === OHNE_ETAPPE) {
+    return eintrag.etappeId === undefined || eintrag.etappeId === null || eintrag.etappeId === ''
+  }
+  return String(eintrag.etappeId) === String(filter)
+}
+
 export default function Restaurants() {
   const [restaurants, setRestaurants] = useState(loadRestaurants)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
+  const [etappeFilter, setEtappeFilter] = useState('')
   const etappenListe = loadEtappenListe()
+  const gefilterteRestaurants = restaurants.filter((r) => matchesEtappeFilter(r, etappeFilter))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(restaurants))
@@ -77,11 +89,32 @@ export default function Restaurants() {
     <section>
       <h2>Restaurants</h2>
 
+      {etappenListe.length > 0 && (
+        <div className="list-filter">
+          <label htmlFor="restaurants-etappe-filter">Etappe</label>
+          <select
+            id="restaurants-etappe-filter"
+            value={etappeFilter}
+            onChange={(e) => setEtappeFilter(e.target.value)}
+          >
+            <option value="">Alle Etappen</option>
+            {etappenListe.map((etappe) => (
+              <option key={etappe.id} value={etappe.id}>
+                {etappe.name}
+              </option>
+            ))}
+            <option value={OHNE_ETAPPE}>Ohne Etappe</option>
+          </select>
+        </div>
+      )}
+
       {restaurants.length === 0 ? (
         <p className="empty">Noch keine Restaurants erfasst.</p>
+      ) : gefilterteRestaurants.length === 0 ? (
+        <p className="empty">Keine Restaurants für diese Etappe.</p>
       ) : (
         <ul className="list">
-          {restaurants.map((r) => (
+          {gefilterteRestaurants.map((r) => (
             <li key={r.id} className="list-item">
               <div className="list-item-main">
                 <strong>{r.name}</strong>
