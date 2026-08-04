@@ -27,11 +27,23 @@ function loadEtappenListe() {
   }
 }
 
+const OHNE_ETAPPE = '__ohne-etappe__'
+
+function matchesEtappeFilter(eintrag, filter) {
+  if (!filter) return true
+  if (filter === OHNE_ETAPPE) {
+    return eintrag.etappeId === undefined || eintrag.etappeId === null || eintrag.etappeId === ''
+  }
+  return String(eintrag.etappeId) === String(filter)
+}
+
 export default function Sightseeing() {
   const [spots, setSpots] = useState(loadSpots)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
+  const [etappeFilter, setEtappeFilter] = useState('')
   const etappenListe = loadEtappenListe()
+  const gefilterteSpots = spots.filter((s) => matchesEtappeFilter(s, etappeFilter))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(spots))
@@ -87,11 +99,32 @@ export default function Sightseeing() {
     <section>
       <h2>Sehenswürdigkeiten</h2>
 
+      {etappenListe.length > 0 && (
+        <div className="list-filter">
+          <label htmlFor="sightseeing-etappe-filter">Etappe</label>
+          <select
+            id="sightseeing-etappe-filter"
+            value={etappeFilter}
+            onChange={(e) => setEtappeFilter(e.target.value)}
+          >
+            <option value="">Alle Etappen</option>
+            {etappenListe.map((etappe) => (
+              <option key={etappe.id} value={etappe.id}>
+                {etappe.name}
+              </option>
+            ))}
+            <option value={OHNE_ETAPPE}>Ohne Etappe</option>
+          </select>
+        </div>
+      )}
+
       {spots.length === 0 ? (
         <p className="empty">Noch keine Sehenswürdigkeiten erfasst.</p>
+      ) : gefilterteSpots.length === 0 ? (
+        <p className="empty">Keine Sehenswürdigkeiten für diese Etappe.</p>
       ) : (
         <ul className="list">
-          {spots.map((s) => (
+          {gefilterteSpots.map((s) => (
             <li key={s.id} className="list-item">
               <div className="list-item-main">
                 <strong>{s.titel}</strong>
