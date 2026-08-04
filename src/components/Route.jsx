@@ -28,13 +28,25 @@ function loadEtappenListe() {
   }
 }
 
+const OHNE_ETAPPE = '__ohne-etappe__'
+
+function matchesEtappeFilter(eintrag, filter) {
+  if (!filter) return true
+  if (filter === OHNE_ETAPPE) {
+    return eintrag.etappeId === undefined || eintrag.etappeId === null || eintrag.etappeId === ''
+  }
+  return String(eintrag.etappeId) === String(filter)
+}
+
 export default function Route() {
   const [etappen, setEtappen] = useState(loadEtappen)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
+  const [etappeFilter, setEtappeFilter] = useState('')
   const etappenListe = loadEtappenListe()
   // Nur die Anzeige-Reihenfolge: chronologisch nach Fahrt-Datum.
   const sortierteFahrten = sortByDate(etappen, (f) => f.datum)
+  const gefilterteFahrten = sortierteFahrten.filter((f) => matchesEtappeFilter(f, etappeFilter))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(etappen))
@@ -80,11 +92,32 @@ export default function Route() {
     <section>
       <h2>Reiseroute</h2>
 
+      {etappenListe.length > 0 && (
+        <div className="list-filter">
+          <label htmlFor="route-etappe-filter">Etappe</label>
+          <select
+            id="route-etappe-filter"
+            value={etappeFilter}
+            onChange={(e) => setEtappeFilter(e.target.value)}
+          >
+            <option value="">Alle Etappen</option>
+            {etappenListe.map((etappe) => (
+              <option key={etappe.id} value={etappe.id}>
+                {etappe.name}
+              </option>
+            ))}
+            <option value={OHNE_ETAPPE}>Ohne Etappe</option>
+          </select>
+        </div>
+      )}
+
       {etappen.length === 0 ? (
         <p className="empty">Noch keine Fahrten erfasst.</p>
+      ) : gefilterteFahrten.length === 0 ? (
+        <p className="empty">Keine Fahrten für diese Etappe.</p>
       ) : (
         <ul className="list">
-          {sortierteFahrten.map((e, index) => {
+          {gefilterteFahrten.map((e, index) => {
             const route = routenUrl(e.von, e.nach)
             const kartenUrl = karteEinbettenUrl(e.nach)
             const zielUrl = ortsUrl(e.nach)
