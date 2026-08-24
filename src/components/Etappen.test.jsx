@@ -111,8 +111,10 @@ describe('Etappen bearbeiten', () => {
     await user.type(screen.getByLabelText('Stadt/Abschnitt'), 'Reims Zentrum')
     await user.click(screen.getByRole('button', { name: 'Änderungen speichern' }))
 
-    expect(screen.getByText('Reims Zentrum')).toBeTruthy()
+    // Abwesenheit zuerst: bleibt der alte Name stehen, ist genau das der
+    // Befund, den der Testlauf melden soll - nicht "Reims Zentrum fehlt".
     expect(screen.queryByText('Reims')).toBeNull()
+    expect(screen.getByText('Reims Zentrum')).toBeTruthy()
 
     // Bearbeiten darf keinen zweiten Eintrag erzeugen
     const gespeichert = gespeicherteEtappen()
@@ -122,9 +124,10 @@ describe('Etappen bearbeiten', () => {
     // Nicht angefasste Felder bleiben erhalten
     expect(gespeichert[0].vonDatum).toBe('2026-08-15')
 
-    // Nach dem Speichern ist der Bearbeiten-Modus beendet
-    expect(screen.getByRole('button', { name: 'Etappe hinzufügen' })).toBeTruthy()
+    // Nach dem Speichern ist der Bearbeiten-Modus beendet.
+    // Abwesenheit zuerst: haengt der Bearbeiten-Modus fest, ist das der Befund.
     expect(screen.queryByRole('button', { name: 'Abbrechen' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Etappe hinzufügen' })).toBeTruthy()
   })
 
   it('Nutzerpfad: Bearbeiten abbrechen laesst den Eintrag unveraendert', async () => {
@@ -137,8 +140,10 @@ describe('Etappen bearbeiten', () => {
     await user.type(screen.getByLabelText('Stadt/Abschnitt'), 'Verworfen')
     await user.click(screen.getByRole('button', { name: 'Abbrechen' }))
 
-    expect(screen.getByText('Reims')).toBeTruthy()
+    // Abwesenheit zuerst: haette Abbrechen die Eingabe doch gespeichert, ist
+    // das der Befund - nicht "Reims fehlt".
     expect(screen.queryByText('Verworfen')).toBeNull()
+    expect(screen.getByText('Reims')).toBeTruthy()
     expect(gespeicherteEtappen()[0].name).toBe('Reims')
     // Formular ist wieder leer und im Anlege-Modus
     expect(screen.getByLabelText('Stadt/Abschnitt').value).toBe('')
