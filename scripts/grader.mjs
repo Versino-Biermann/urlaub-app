@@ -59,7 +59,7 @@ function beende(code, text, vitestStatus) {
 // Zwei getrennte Startfehler-Wege, beide abgesichert:
 //   - spawnSync WIRFT bei fehlerhaften Aufrufargumenten (gemessen: RangeError
 //     bei ungueltigem timeout, TypeError bei Nicht-Zeichenketten-Kommando).
-//     Ohne try/catch stirbe das Skript hier mit einem Node-Stacktrace - also
+//     Ohne try/catch stirbt das Skript hier mit einem Node-Stacktrace - also
 //     ohne die Einordnung, fuer die es gebaut ist.
 //   - spawnSync WIRFT NICHT, wenn nur das Kommando fehlt; es liefert dann
 //     lauf.error (ENOENT) bzw. bei shell:true einen Shell-Exit. lauf.error
