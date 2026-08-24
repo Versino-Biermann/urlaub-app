@@ -53,9 +53,12 @@ describe('Buchungen anlegen', () => {
     const user = userEvent.setup()
     render(<Bookings />)
 
-    // Vor dem Wechsel: ein einzelnes Datumsfeld
-    expect(screen.getByLabelText('Datum')).toBeTruthy()
+    // Vor dem Wechsel: ein einzelnes Datumsfeld.
+    // Die Abwesenheits-Pruefung steht absichtlich VOR der Anwesenheits-Pruefung:
+    // scheitert die vordere, bricht der Test ab und die hintere laeuft nie -
+    // die Reihenfolge entscheidet also, welcher Befund berichtet wird.
     expect(screen.queryByLabelText('Check-in')).toBeNull()
+    expect(screen.getByLabelText('Datum')).toBeTruthy()
 
     await user.selectOptions(screen.getByLabelText('Typ'), 'Unterkunft')
 
@@ -99,11 +102,21 @@ describe('Buchungen anlegen', () => {
     render(<Bookings />)
 
     await user.type(screen.getByLabelText('Titel'), 'Hotel de la Paix')
-    // Das Zuordnungs-Auswahlfeld im Formular ist das, das "— keine —" anbietet;
-    // der Listen-Filter darueber bietet stattdessen "Alle Etappen".
+    // Es gibt zwei Auswahlfelder mit der Beschriftung "Etappe": den Listen-Filter
+    // (bietet "Alle Etappen" an) und das Zuordnungsfeld im Formular (bietet das
+    // nicht an). Unterschieden wird ueber genau dieselbe sichtbare Eigenschaft,
+    // die auch EtappeFilter.test.jsx verwendet - damit gibt es in der Testbasis
+    // nur einen einzigen Begriff, der sich aendern kann, statt zweier.
     const zuordnung = screen
       .getAllByLabelText('Etappe')
-      .find((el) => [...el.options].some((o) => o.textContent === '— keine —'))
+      .find((el) => ![...el.options].some((o) => o.textContent === 'Alle Etappen'))
+    // Ohne diese Schranke liefert .find() still undefined und der Test scheitert
+    // erst weiter unten mit einer Meldung, die die Ursache nicht nennt.
+    if (!zuordnung) {
+      throw new Error(
+        'Kein Etappen-Zuordnungsfeld im Formular gefunden (nur der Listen-Filter).',
+      )
+    }
     await user.selectOptions(zuordnung, '7')
     await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
 
@@ -141,8 +154,10 @@ describe('Buchungen bearbeiten', () => {
     await user.type(screen.getByLabelText('Titel'), 'Hotel Central')
     await user.click(screen.getByRole('button', { name: 'Änderungen speichern' }))
 
-    expect(screen.getByText('Hotel Central')).toBeTruthy()
+    // Abwesenheit zuerst: bleibt der alte Titel stehen, ist genau das der
+    // Befund, den der Testlauf melden soll.
     expect(screen.queryByText('Hotel de la Paix')).toBeNull()
+    expect(screen.getByText('Hotel Central')).toBeTruthy()
 
     const gespeichert = gespeicherteBuchungen()
     expect(gespeichert).toHaveLength(1)
@@ -166,8 +181,10 @@ describe('Buchungen bearbeiten', () => {
     await user.type(screen.getByLabelText('Titel'), 'Verworfen')
     await user.click(screen.getByRole('button', { name: 'Abbrechen' }))
 
-    expect(screen.getByText('Hotel Central')).toBeTruthy()
+    // Abwesenheit zuerst: haette Abbrechen die Eingabe doch gespeichert, ist
+    // das der Befund - nicht "Hotel Central fehlt".
     expect(screen.queryByText('Verworfen')).toBeNull()
+    expect(screen.getByText('Hotel Central')).toBeTruthy()
     expect(gespeicherteBuchungen()[0].titel).toBe('Hotel Central')
     expect(screen.getByLabelText('Titel').value).toBe('')
   })
