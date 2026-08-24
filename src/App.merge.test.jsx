@@ -75,8 +75,11 @@ describe('Startup-Merge: gewolltes Verhalten des Tradeoffs', () => {
     await appIstGeladen()
 
     // Das ist die Entscheidung, nicht ein Defekt: die lokale Umbenennung ist fort.
-    expect(screen.getByText('Reims')).toBeTruthy()
+    // Die Abwesenheits-Pruefung steht zuerst, weil sie die eigentliche Regel
+    // traegt. Stuende sie hinten, wuerde ein Merge-Ausfall zuerst an
+    // getByText('Reims') scheitern und die Regel-Pruefung nie ausfuehren.
     expect(screen.queryByText('Reims (mein Name)')).toBeNull()
+    expect(screen.getByText('Reims')).toBeTruthy()
 
     const etappen = gespeichert(ETAPPEN_KEY)
     expect(etappen).toHaveLength(1)
@@ -149,12 +152,16 @@ describe('Startup-Merge: gewolltes Verhalten des Tradeoffs', () => {
     render(<App />)
     await appIstGeladen()
 
+    // Diese Abwesenheits-Pruefung stand vorher HINTER der toEqual-Pruefung und
+    // war dort nicht ausloesbar: sobald der ueberschriebene Name irgendwo
+    // auftaucht, weicht auch die gespeicherte Namensliste ab, und die
+    // toEqual-Pruefung bricht vorher ab. Nach vorn gezogen greift sie eigenstaendig.
+    expect(screen.queryByText('Reims (mein Name)')).toBeNull()
     expect(gespeichert(ETAPPEN_KEY).map((e) => e.name)).toEqual([
       'Reims',
       'Rouen',
       'Nur lokal angelegt',
     ])
-    expect(screen.queryByText('Reims (mein Name)')).toBeNull()
   })
 
   it('Nutzerpfad: Bereich, den data.json nicht kennt -> lokale Eintraege bleiben unangetastet', async () => {
