@@ -35,19 +35,64 @@ const WEITERE_ARGUMENTE = process.argv.slice(2)
 // Aufraeumen, falls eine Datei aus einem abgebrochenen Lauf liegen geblieben ist.
 if (existsSync(ERGEBNIS_DATEI)) rmSync(ERGEBNIS_DATEI, { force: true })
 
+/**
+ * Urteil ausgeben und das Skript beenden. Einziger Ausgang des Skripts, damit
+ * jeder Pfad - auch die Startfehler - dieselbe Meldeform benutzt.
+ */
+function beende(code, text, vitestStatus) {
+  try {
+    rmSync(ERGEBNIS_DATEI, { force: true })
+  } catch {
+    // Aufraeumen ist Nebensache. Eine gesperrte Temp-Datei darf das Urteil
+    // nicht kippen und schon gar nicht das Skript abstuerzen lassen.
+  }
+
+  const etikett = { 0: 'GRUEN', 1: 'ROT', 2: 'KEIN ERGEBNIS' }[code]
+  // Auf stderr, damit die Zeile nicht mit der Reporter-Ausgabe auf stdout
+  // vermischt wird.
+  console.error(`\n[grader] ${etikett} (exit ${code}) - ${text} vitest-Exit war ${vitestStatus}.`)
+  process.exit(code)
+}
+
 // default-Reporter fuer den Menschen, json-Reporter fuer die Maschine.
-const lauf = spawnSync(
-  'npx',
-  [
-    'vitest',
-    'run',
-    '--reporter=default',
-    '--reporter=json',
-    `--outputFile=${ERGEBNIS_DATEI}`,
-    ...WEITERE_ARGUMENTE,
-  ],
-  { stdio: 'inherit', shell: true },
-)
+//
+// Zwei getrennte Startfehler-Wege, beide abgesichert:
+//   - spawnSync WIRFT bei fehlerhaften Aufrufargumenten (gemessen: RangeError
+//     bei ungueltigem timeout, TypeError bei Nicht-Zeichenketten-Kommando).
+//     Ohne try/catch stirbe das Skript hier mit einem Node-Stacktrace - also
+//     ohne die Einordnung, fuer die es gebaut ist.
+//   - spawnSync WIRFT NICHT, wenn nur das Kommando fehlt; es liefert dann
+//     lauf.error (ENOENT) bzw. bei shell:true einen Shell-Exit. lauf.error
+//     wurde vorher nie geprueft.
+let lauf
+try {
+  lauf = spawnSync(
+    'npx',
+    [
+      'vitest',
+      'run',
+      '--reporter=default',
+      '--reporter=json',
+      `--outputFile=${ERGEBNIS_DATEI}`,
+      ...WEITERE_ARGUMENTE,
+    ],
+    { stdio: 'inherit', shell: true },
+  )
+} catch (fehler) {
+  beende(
+    2,
+    `Testlauf liess sich nicht starten (${fehler.constructor.name}: ${fehler.message.split('\n')[0]}) - kein Testergebnis.`,
+    'nicht gestartet',
+  )
+}
+
+if (lauf.error) {
+  beende(
+    2,
+    `Testlauf liess sich nicht starten (${lauf.error.message.split('\n')[0]}) - kein Testergebnis.`,
+    lauf.status,
+  )
+}
 
 function bewerte() {
   if (!existsSync(ERGEBNIS_DATEI)) {
@@ -76,7 +121,9 @@ function bewerte() {
   }
 
   const fehlgeschlagen = Number(bericht.numFailedTests ?? 0)
-  if (bericht.success === true && fehlgeschlagen === 0) {
+  // success === true impliziert bereits numFailedTests === 0 - die zweite
+  // Bedingung war redundant. Die Zahl wird nur noch fuer den Meldetext gebraucht.
+  if (bericht.success === true) {
     return { code: 0, text: `${gesamt} Tests gelaufen, alle gruen.` }
   }
 
@@ -87,13 +134,4 @@ function bewerte() {
 }
 
 const urteil = bewerte()
-rmSync(ERGEBNIS_DATEI, { force: true })
-
-const etikett = { 0: 'GRUEN', 1: 'ROT', 2: 'KEIN ERGEBNIS' }[urteil.code]
-// Auf stderr, damit die Zeile nicht mit der Reporter-Ausgabe auf stdout vermischt wird.
-console.error(
-  `\n[grader] ${etikett} (exit ${urteil.code}) - ${urteil.text}` +
-    ` vitest-Exit war ${lauf.status}.`,
-)
-
-process.exit(urteil.code)
+beende(urteil.code, urteil.text, lauf.status)
