@@ -14,5 +14,7 @@ export default defineConfig({
     include: ['src/**/*.test.{js,jsx}'],
     // globals bleibt auf dem Standard false - Testfunktionen werden importiert.
     css: false,
+    // Spies auf Browser-APIs (window.confirm) nach jedem Test zuruecksetzen.
+    restoreMocks: true,
   },
 })
