@@ -1,7 +1,7 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-08-02T20:24:00Z",
+  "updatedAt": "2026-08-25T21:46:18Z",
   "data": {
     "etappen": [
       {
@@ -213,7 +213,68 @@
         "etappeId": "2dc059fcc59d426da898a8064a51e87a"
       }
     ],
-    "sightseeing": [],
+    "sightseeing": [
+      {
+        "id": 1785861637893,
+        "titel": "Cathédrale Notre-Dame de Reims",
+        "ort": "Reimes",
+        "kategorie": "Bauwerk",
+        "notiz": "Meisterwerk der Gotik und historische Krönungsstätte der französischen Könige. Beeindruckend sind die Bleiglasfenster (u. a. von Marc Chagall) und der berühmte „Lächelde Engel“ an der Westfassade.",
+        "link": "https://de.wikipedia.org/wiki/Kathedrale_von_Reims",
+        "status": "geplant",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": 1785861903333,
+        "titel": "Art-déco-Architektur",
+        "ort": "Reims",
+        "kategorie": "Bauwerk",
+        "notiz": "Die Stadt Reims gibt auf ihrer Internet Seite und als Faltblatt einen Plan heraus für einen ausführlichen Spaziergang unter dem Motto 'Art Deco in Reims'",
+        "link": "https://www.umdiewelt.de/t2392_2",
+        "status": "geplant",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": 1785862100520,
+        "titel": "Kathedrale Notre-Dame de Rouen",
+        "ort": "Rouen",
+        "kategorie": "Bauwerk",
+        "notiz": "Berühmt durch die Bilderserie von Claude Monet. Sie besitzt den höchsten Kirchturm Frankreichs.",
+        "link": "https://de.wikipedia.org/wiki/Kathedrale_von_Rouen",
+        "status": "geplant",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": 1785863307797,
+        "titel": "Gustave-Flaubert Brücke",
+        "ort": "Rouen",
+        "kategorie": "Bauwerk",
+        "notiz": "In Rouen, auf dem Seine Fluss befindet sich die höchste Zugbrücke in der Welt - Gustave-Flaubert Brücke. Ihre allgemeine Höhe bildet 91 Meter, die Brückekonstruktion ist ganz ungewöhnlich. Das ist eine senkrechte Zugbrücke, weswegen sie den inoffiziellen Namen \"die Aufzug-Brücke\" bekommen hat. Die Länge des Zugteils der Brücke bildet 116 Meter, und ihre allgemeine Ausdehnung ist viel größer und erreicht 670 Meter.",
+        "link": "https://www.orangesmile.com/extreme/de/unusual-bridges/pont-gustave-flaubert.htm",
+        "status": "geplant",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": 1786392111066,
+        "titel": "Aître Saint-Maclou",
+        "ort": "Rouen",
+        "kategorie": "Bauwerk",
+        "notiz": "Der Aître Saint-Maclou ist ein ehemaliger Massengrabfriedhof aus dem 16. Jahrhundert in der 186 rue Martainville in Rouen in Frankreich. Es ist eines der wenigen Beispiele für ein Ossuarium dieser Art, das noch in Europa vorhanden ist.\n\n186 rue Martainville\n76000 ROUEN\n\nhttps://de.normandie-tourisme.fr/absolut-sehenswert/rouen/friedhof-saint-maclou/\n\n#Die Katze und der Totengräber#\nBegleiten Sie zwei ikonische Figuren aus diesem ehemaligen Beinhaus – die Katze und den Totengräber – auf einem fesselnden Audio-Rundgang.\n\nAudioguides sind an der Kasse von „Rouen Sites et Monuments“ im Innenhof des Aître erhältlich.\n\nFührung für Erwachsene:\nErfahren Sie während dieser fesselnden Audioguide-Führung mehr über den Aître \nSaint-Maclou anhand der farbenfrohen Geschichte einer symbolträchtigen Figur dieses ehemaligen Friedhofs: des Totengräbers. Geschichten, Legenden und Anekdoten – er hat viel zu erzählen!\n\n5 € pro Person | Auf Französisch, Englisch, Deutsch, Italienisch, Spanisch\n\nhttps://www.aitresaintmaclou.fr/en/tours/audio-guided-immersive-tour/",
+        "link": "https://de.wikipedia.org/wiki/Aître_Saint-Maclou",
+        "status": "geplant",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": 1786392569750,
+        "titel": "Pâtisseries de Gill",
+        "ort": "Rouen",
+        "kategorie": "Shopping ",
+        "notiz": "Feinschmecker werden beim Besuch der Pâtisseries de Gill ins Schwärmen geraten: Ganz in der Nähe der ehemaligen Bäckerei seines Vaters und Großvaters hat Sternekoch Gilles Tournadre, gemeinsam mit dem Chef-Pâtissier Christophe Lecourt, eine exklusive Konditorei eröffnet – unter anderem mit raffinierten Desserts rund um den Apfel.",
+        "link": "https://de.normandie-tourisme.fr/absolut-sehenswert/rouen/friedhof-saint-maclou/",
+        "status": "geplant",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      }
+    ],
     "events": [
       {
         "id": 1785834080383,
@@ -235,6 +296,39 @@
         "status": "geplant",
         "notiz": "Im offiziellen Tourismusbüro (direkt gegenüber der Kathedrale) können Sie physische Audioguides auf Deutsch ausleihen (ca. 2-stündige Route). Der Weg führt vorbei am Astronomischen Uhrwerk (Gros-Horloge), den mittelalterlichen Fachwerkhäusern bis zum Platz der Hinrichtung von Jeanne d’Arc.",
         "link": "https://de.visiterouen.com",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": 1785847728792,
+        "titel": "Market Paimpol (Hafen & Altstadt)",
+        "datum": "2026-09-08",
+        "ort": "Paimpol",
+        "kontakt": "",
+        "status": "geplant",
+        "notiz": "Der wichtigste Markt der Woche. Riesige Auswahl an frischem Fisch, Austern, bretonischer Butter, Cidre und Gemüse. Ideal, um sich für die Ferienwohnung einzudecken.",
+        "link": "https://www.tripadvisor.de/ShowUserReviews-g488278-d18929800-r1051319333-Marche_de_Paimpol-Paimpol_Cotes_d_Armor_Brittany.html",
+        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
+      },
+      {
+        "id": 1785854201992,
+        "titel": "Regionales Event / Gezeiten",
+        "datum": "2026-09-04",
+        "ort": "Saint-Malo",
+        "kontakt": "",
+        "status": "geplant",
+        "notiz": "Am Freitag, 04. September 2026, herrscht mittags ein perfektes Ebbe-Fenster.\n\nBei Ebbe lässt sich eine geschützte Artenvielfalt entdecken. Saint-Malo und die Bucht von Mont-Saint-Michel bieten Angelfreunden dank der sehr hohen Koeffizienten, die zur Zeit der Tagundnachtgleiche über 100 betragen können, einen der größten Spielplätze der Welt. Ziehen Sie Ihre Stiefel an und machen Sie sich auf den Weg, um Ihre Lungen mit Jod und Ihren Eimer mit köstlichen Juwelen zu füllen.",
+        "link": "https://de.saint-malo-tourisme.com/erkunden-sie-unser-reiseziel/nautische-inspirationen/die-grossen-gezeiten/",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": 1786393470506,
+        "titel": "Cathédrale de Lumière",
+        "datum": "2026-08-30",
+        "ort": "Rouen",
+        "kontakt": "",
+        "status": "geplant",
+        "notiz": "Das Event: Die Fassade der höchsten Kathedrale Frankreichs verwandelt sich nach Einbruch der Dunkelheit in eine riesige Leinwand für Videomappings. Für 2026 stehen die Projektionen ganz im Zeichen des Impressionismus und des Japonismus (unter anderem mit Werken der Künstlerin Mika Ninagawa und Referenzen an Claude Monet).  \n\nUhrzeit am 30.08.2026: Der Start der Projektion ist um 22:00 Uhr auf der Place de la Cathédrale.  \n\nPraktisch: Das Spektakel dauert etwa 30 Minuten, ist komplett kostenfrei und ohne Reservierung zugänglich. Vom Hotel aus erreichen Sie den Kathedralenplatz in ca. 10 bis 12 Gehminuten.",
+        "link": "https://de.visiterouen.com/nachrichten/im-rhythmus-der-hohepunkte/kathedrale-des-lichts/",
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       }
     ],
@@ -259,6 +353,50 @@
         "kontakt": "",
         "notiz": "Eine unumgängliche Adresse für Käseliebhaber in Rouen. Dieser in der Gegend noch einzigartige Ort vereint eine Molkerei, eine Käserei und eine Käsebar. Der ehemalige Informatiker Emmanuel Fournier, der zum Käser umgeschult hat, eröffnete dieses charmante Lokal im Mai 2024. Als großer Liebhaber des Genres bietet er eine ganze Auswahl an französischen, italienischen und spanischen Käsesorten an, die manchmal nirgendwo anders zu finden sind. Vor Ort kann man auch Käse- und Wurstplatten sowie Mittagsangebote probieren. Ein besonderer Ort, ideal für einen Afterwork-Gourmetabend!",
         "link": "https://www.instagram.com/fromageriebarbickett/?hl=de",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+      },
+      {
+        "id": 1785847417236,
+        "name": "Buvette des Bains",
+        "ort": "Saint-Malo",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "Buvette de la Plage (nahe Ihrer Unterkunft Frida) – Keine gehobene Gastronomie, sondern eine kleine Holz-Bar direkt am Strand, in der man mit den Füßen im Sand bretonisches Bier und Sardinen aus der Dose genießt.",
+        "link": "https://www.tripadvisor.fr/Restaurant_Review-g187104-d3508973-Reviews-Buvette_des_Bains-Saint_Malo_Ille_et_Vilaine_Brittany.html",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": 1785860467593,
+        "name": "L'Ancrage",
+        "ort": "Saint-Malo",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "7 Rue Jacques Cartier, 35400, Saint-Malo France\n\nDas „L'Ancrage“ ist ein Restaurant im Stil einer Pariser Brasserie. Werfen Sie den Anker in diesem Restaurant, das einer Schiffskabine gleicht (dunkle Holzvertäfelung, Messinglampen). Sie werden hier herzlich empfangen. Die Küche ist ganz auf Meeresfrüchte und frischen Fisch ausgerichtet. (Der Küchenchef wählt seine Produkte direkt vor Ort aus.) Die zubereiteten Gerichte basieren auf einer einfachen Küche, bei der der Schwerpunkt auf der Qualität, der Würzung und der Zubereitung der Produkte liegt.",
+        "link": "https://www.tripadvisor.fr/Restaurant_Review-g187104-d1524391-Reviews-L_Ancrage-Saint_Malo_Ille_et_Vilaine_Brittany.html",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": 1785860947054,
+        "name": "Le Bistro de Jean",
+        "ort": "",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "6 rue de la Corne de Cerf, 35400, Saint-Malo France\n\nEin schönes Ambiente im Bistro-Stil, traditionelle Küche mit frischen Zutaten vom Markt",
+        "link": "https://www.tripadvisor.fr/Restaurant_Review-g187104-d1148268-Reviews-Le_Bistro_de_Jean-Saint_Malo_Ille_et_Vilaine_Brittany.html",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": 1787691592443,
+        "name": "test -restaurant ",
+        "ort": "Rouen",
+        "kueche": "regional",
+        "reservierung": "",
+        "kontakt": "",
+        "notiz": "test2617",
+        "link": "",
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       }
     ]
