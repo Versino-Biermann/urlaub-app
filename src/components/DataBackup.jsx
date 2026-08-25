@@ -1,13 +1,9 @@
 import { useState, useRef } from 'react'
-
-const STORAGE_KEYS = {
-  etappen: 'urlaub-app.etappen',
-  bookings: 'urlaub-app.bookings',
-  route: 'urlaub-app.route',
-  sightseeing: 'urlaub-app.sightseeing',
-  events: 'urlaub-app.events',
-  restaurants: 'urlaub-app.restaurants',
-}
+import BackupShare from './BackupShare'
+// STORAGE_KEYS und formatDateForFilename liegen jetzt in src/backup.js, damit
+// Download-Export und Teilen-Weg dieselbe Quelle benutzen. Zwei Kopien der
+// Schluesselliste laufen auseinander, sobald ein Bereich dazukommt.
+import { STORAGE_KEYS, formatDateForFilename } from '../backup'
 
 function readKeyRaw(storageKey) {
   try {
@@ -16,13 +12,6 @@ function readKeyRaw(storageKey) {
   } catch {
     return []
   }
-}
-
-function formatDateForFilename(date) {
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
-  const dd = String(date.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
 }
 
 function DataBackup() {
@@ -120,6 +109,7 @@ function DataBackup() {
         />
       </label>
       {errorText ? <span className="backup-error">{errorText}</span> : null}
+      <BackupShare />
     </div>
   )
 }
