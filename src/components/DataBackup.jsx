@@ -1,27 +1,46 @@
 import { useState, useRef } from 'react'
-import BackupShare from './BackupShare'
-import DefektHinweis from './DefektHinweis'
-// Backup-Format, Leseweg und Dateinamens-Bildung liegen in src/backup.js, damit
-// Download-Export und Teilen-Weg dieselbe Quelle benutzen. Zwei Kopien der
-// Schluesselliste laufen auseinander, sobald ein Bereich dazukommt.
-import { STORAGE_KEYS, baueBackup, formatDateForFilename } from '../backup'
+
+const STORAGE_KEYS = {
+  etappen: 'urlaub-app.etappen',
+  bookings: 'urlaub-app.bookings',
+  route: 'urlaub-app.route',
+  sightseeing: 'urlaub-app.sightseeing',
+  events: 'urlaub-app.events',
+  restaurants: 'urlaub-app.restaurants',
+}
+
+function readKeyRaw(storageKey) {
+  try {
+    const raw = localStorage.getItem(storageKey)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function formatDateForFilename(date) {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
 function DataBackup() {
   const [errorText, setErrorText] = useState('')
-  const [defekteBereiche, setDefekteBereiche] = useState([])
   const fileInputRef = useRef(null)
 
   const handleExport = () => {
-    // baueBackup liefert exakt dasselbe Objekt wie vorher (app/version/
-    // exportedAt/data) - und zusaetzlich den Befund, welche Bereiche sich
-    // nicht lesen liessen. Der bisherige Leseweg hat einen beschaedigten
-    // Schluessel still zu einer leeren Liste gemacht: das Backup sah dann
-    // vollstaendig aus, obwohl ein ganzer Bereich fehlte.
-    //
-    // Der Befund informiert nur. Er bricht den Export NICHT ab - ein
-    // lueckenhaftes Backup ist mehr wert als gar keins.
-    const { backup, defekte } = baueBackup()
-    setDefekteBereiche(defekte)
+    const data = {}
+    for (const [dataKey, storageKey] of Object.entries(STORAGE_KEYS)) {
+      data[dataKey] = readKeyRaw(storageKey)
+    }
+
+    const backup = {
+      app: 'urlaub-app',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data,
+    }
 
     const blob = new Blob([JSON.stringify(backup, null, 2)], {
       type: 'application/json',
@@ -71,23 +90,8 @@ function DataBackup() {
       }
 
       location.reload()
-    } catch (fehler) {
-      // Der breite Fangbereich hat den fehlenden STORAGE_KEYS-Import
-      // verschluckt: die Datei war einwandfrei gelesen und geparst, der
-      // ReferenceError flog erst beim Schreiben - und die Meldung schob es
-      // auf die Datei. Ein Programmierfehler und eine beschaedigte Datei
-      // duerfen fuer den Nutzer nicht identisch aussehen.
-      //
-      // Der Ablauf bleibt unveraendert (lesen, pruefen, bestaetigen,
-      // schreiben, neu laden); es aendert sich nur, WAS gemeldet wird.
-      console.error('Backup-Import fehlgeschlagen:', fehler)
-      const istProgrammfehler =
-        fehler instanceof ReferenceError || fehler instanceof TypeError
-      setErrorText(
-        istProgrammfehler
-          ? `Interner Fehler beim Wiederherstellen (${fehler.name}). Die Datei ist in Ordnung – bitte den Fehler melden.`
-          : 'Die Backup-Datei konnte nicht gelesen werden.',
-      )
+    } catch {
+      setErrorText('Die Backup-Datei konnte nicht gelesen werden.')
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -97,11 +101,7 @@ function DataBackup() {
 
   return (
     <div className="backup-bar">
-      <span className="backup-hint">
-        Daten liegen nur lokal in diesem Browser. Änderungen und Löschungen bleiben
-        erhalten, bis ein neuer Stand veröffentlicht wird; dann gewinnt der veröffentlichte
-        Stand bei bestehenden Einträgen.
-      </span>
+      <span className="backup-hint">Daten liegen nur lokal in diesem Browser.</span>
       <button type="button" onClick={handleExport}>
         Backup exportieren
       </button>
@@ -116,8 +116,6 @@ function DataBackup() {
         />
       </label>
       {errorText ? <span className="backup-error">{errorText}</span> : null}
-      <DefektHinweis defekte={defekteBereiche} />
-      <BackupShare />
     </div>
   )
 }

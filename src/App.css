@@ -36,39 +36,6 @@
   color: var(--color-text-muted);
 }
 
-/* Zweiter Sicherungsweg (Teilen / Text). Bewusst minimal: die Leiste ist ein
-   Flex-Container, der Block braucht die volle Breite, sonst quetscht das
-   Textfeld die Knoepfe. Feinschliff liegt bei Iris, nicht hier. */
-.backup-share {
-  flex-basis: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.backup-share-meldung,
-.backup-share-warnung {
-  flex-basis: 100%;
-  margin: 0;
-  color: var(--color-text-muted);
-}
-
-.backup-share-text {
-  flex-basis: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-2);
-}
-
-.backup-share-feld {
-  flex: 1 1 100%;
-  min-width: 0;
-  font-family: monospace;
-  font-size: 0.75rem;
-}
-
 /* --- Navigation: Segment-/Pill-Leiste, bricht auf schmalen Screens um --- */
 .nav {
   display: flex;
