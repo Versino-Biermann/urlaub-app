@@ -1,35 +1,27 @@
 import { useState, useRef } from 'react'
 import BackupShare from './BackupShare'
-// STORAGE_KEYS und formatDateForFilename liegen jetzt in src/backup.js, damit
+import DefektHinweis from './DefektHinweis'
+// Backup-Format, Leseweg und Dateinamens-Bildung liegen in src/backup.js, damit
 // Download-Export und Teilen-Weg dieselbe Quelle benutzen. Zwei Kopien der
 // Schluesselliste laufen auseinander, sobald ein Bereich dazukommt.
-import { STORAGE_KEYS, formatDateForFilename } from '../backup'
-
-function readKeyRaw(storageKey) {
-  try {
-    const raw = localStorage.getItem(storageKey)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+import { baueBackup, formatDateForFilename } from '../backup'
 
 function DataBackup() {
   const [errorText, setErrorText] = useState('')
+  const [defekteBereiche, setDefekteBereiche] = useState([])
   const fileInputRef = useRef(null)
 
   const handleExport = () => {
-    const data = {}
-    for (const [dataKey, storageKey] of Object.entries(STORAGE_KEYS)) {
-      data[dataKey] = readKeyRaw(storageKey)
-    }
-
-    const backup = {
-      app: 'urlaub-app',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      data,
-    }
+    // baueBackup liefert exakt dasselbe Objekt wie vorher (app/version/
+    // exportedAt/data) - und zusaetzlich den Befund, welche Bereiche sich
+    // nicht lesen liessen. Der bisherige Leseweg hat einen beschaedigten
+    // Schluessel still zu einer leeren Liste gemacht: das Backup sah dann
+    // vollstaendig aus, obwohl ein ganzer Bereich fehlte.
+    //
+    // Der Befund informiert nur. Er bricht den Export NICHT ab - ein
+    // lueckenhaftes Backup ist mehr wert als gar keins.
+    const { backup, defekte } = baueBackup()
+    setDefekteBereiche(defekte)
 
     const blob = new Blob([JSON.stringify(backup, null, 2)], {
       type: 'application/json',
@@ -109,6 +101,7 @@ function DataBackup() {
         />
       </label>
       {errorText ? <span className="backup-error">{errorText}</span> : null}
+      <DefektHinweis defekte={defekteBereiche} />
       <BackupShare />
     </div>
   )
