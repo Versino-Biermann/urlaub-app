@@ -29,6 +29,13 @@ import App from './App'
 // Wenn ein Test hier rot wird, ist das kein Testfehler, der wegzureparieren
 // ist. Dann wurde die Merge-Regel geaendert, und es braucht eine Entscheidung
 // dazu - nicht eine Anpassung dieser Erwartungen.
+//
+// NACHTRAG 2026-08-25 (Owner-Entscheid): Ob ueberhaupt gemergt wird, haengt
+// seitdem am Top-Level-updatedAt aus data.json. Die Merge-Regel selbst ist
+// unveraendert. Die Payloads in diesem ersten Block liefern kein updatedAt,
+// fuer sie greift der Rueckfall "mergen wie bisher" - ihre Erwartungen gelten
+// deshalb weiter. Die neuen Faelle stehen im Block "Merkmarke aus updatedAt"
+// am Ende dieser Datei.
 
 const ETAPPEN_KEY = 'urlaub-app.etappen'
 const BOOKINGS_KEY = 'urlaub-app.bookings'
@@ -227,5 +234,195 @@ describe('Startup-Merge: data.json nicht erreichbar', () => {
 
     expect(screen.getByText('Reims (mein Name)')).toBeTruthy()
     expect(gespeichert(ETAPPEN_KEY)).toHaveLength(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Merkmarke: gemergt wird nur bei geaendertem updatedAt
+// ---------------------------------------------------------------------------
+//
+// Owner-Entscheid 2026-08-25 (Vault-Hub urlaub-app.md, Abschnitt
+// "Merge-Verhalten geaendert"): Die App merkt sich das zuletzt verarbeitete
+// Top-Level-updatedAt aus data.json. Ist der Wert unveraendert, findet kein
+// Merge statt - lokale Aenderungen UND Loeschungen bleiben dann erhalten.
+//
+// Die Tests weiter oben liefern bewusst kein updatedAt aus. Fuer sie greift
+// der Rueckfall "kein updatedAt -> mergen wie bisher", ihre Erwartungen
+// bleiben deshalb unveraendert gueltig.
+
+const STAMP_KEY = 'urlaub-app.datastand'
+
+function marke() {
+  return window.localStorage.getItem(STAMP_KEY)
+}
+
+describe('Startup-Merge: Merkmarke aus updatedAt', () => {
+  it('Nutzerpfad: erster Start ohne Marke -> es wird gemergt und die Marke gesetzt', async () => {
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T10:00:00Z',
+      data: { etappen: [{ id: 1, name: 'Reims' }] },
+    })
+
+    render(<App />)
+    await appIstGeladen()
+
+    expect(screen.queryByText('Reims (mein Name)')).toBeNull()
+    expect(gespeichert(ETAPPEN_KEY)[0].name).toBe('Reims')
+    expect(marke()).toBe('2026-08-25T10:00:00Z')
+  })
+
+  it('Nutzerpfad: Eintrag geaendert und einen geloescht, dann neu geladen ohne neuen Stand -> beides bleibt erhalten', async () => {
+    // Der Nutzer hat "Reims" umbenannt und "Rouen" (id 2) geloescht.
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    window.localStorage.setItem(STAMP_KEY, '2026-08-25T10:00:00Z')
+    // data.json ist unveraendert - dasselbe updatedAt wie in der Marke.
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T10:00:00Z',
+      data: {
+        etappen: [
+          { id: 1, name: 'Reims' },
+          { id: 2, name: 'Rouen' },
+        ],
+      },
+    })
+
+    render(<App />)
+    await appIstGeladen()
+
+    // Die Loeschung bleibt eine Loeschung: Rouen kommt NICHT zurueck.
+    expect(screen.queryByText('Rouen')).toBeNull()
+    // Die Umbenennung ueberlebt.
+    expect(screen.getByText('Reims (mein Name)')).toBeTruthy()
+    expect(gespeichert(ETAPPEN_KEY).map((e) => e.name)).toEqual(['Reims (mein Name)'])
+    expect(marke()).toBe('2026-08-25T10:00:00Z')
+  })
+
+  it('Nutzerpfad: neuer Stand veroeffentlicht -> es wird gemergt und die Marke nachgezogen', async () => {
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    window.localStorage.setItem(STAMP_KEY, '2026-08-25T10:00:00Z')
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T18:30:00Z',
+      data: {
+        etappen: [
+          { id: 1, name: 'Reims' },
+          { id: 2, name: 'Rouen' },
+        ],
+      },
+    })
+
+    render(<App />)
+    await appIstGeladen()
+
+    expect(screen.queryByText('Reims (mein Name)')).toBeNull()
+    expect(gespeichert(ETAPPEN_KEY).map((e) => e.name)).toEqual(['Reims', 'Rouen'])
+    expect(marke()).toBe('2026-08-25T18:30:00Z')
+  })
+
+  it('Nutzerpfad: Speicher laeuft mitten im Merge voll -> keine Marke, der naechste Start merged erneut', async () => {
+    window.localStorage.setItem(ETAPPEN_KEY, JSON.stringify([{ id: 1, name: 'Alt' }]))
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T18:30:00Z',
+      data: {
+        etappen: [{ id: 1, name: 'Reims' }],
+        route: [{ id: 5, von: 'Reims', nach: 'Rouen' }],
+      },
+    })
+
+    // Der dritte Schluessel der Schleife (route) scheitert - die Schleife
+    // bricht ab, nachdem etappen bereits geschrieben wurde.
+    const echtesSetItem = window.localStorage.setItem.bind(window.localStorage)
+    const spion = vi
+      .spyOn(window.localStorage, 'setItem')
+      .mockImplementation((key, value) => {
+        if (key === 'urlaub-app.route') {
+          throw new DOMException('voll', 'QuotaExceededError')
+        }
+        echtesSetItem(key, value)
+      })
+
+    try {
+      render(<App />)
+      await appIstGeladen()
+
+      // Genau das ist der Kern: halb gemergt, aber NICHT als erledigt vermerkt.
+      expect(marke()).toBeNull()
+      expect(gespeichert(ETAPPEN_KEY)[0].name).toBe('Reims')
+    } finally {
+      spion.mockRestore()
+    }
+  })
+
+  it('Nutzerpfad: unbrauchbarer Wert in der Marke -> wie ohne Marke, es wird gemergt', async () => {
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    window.localStorage.setItem(STAMP_KEY, '{kaputt')
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T18:30:00Z',
+      data: { etappen: [{ id: 1, name: 'Reims' }] },
+    })
+
+    render(<App />)
+    await appIstGeladen()
+
+    expect(screen.queryByText('Reims (mein Name)')).toBeNull()
+    expect(gespeichert(ETAPPEN_KEY)[0].name).toBe('Reims')
+    expect(marke()).toBe('2026-08-25T18:30:00Z')
+  })
+
+  it('Nutzerpfad: Marke nicht lesbar (Speicherzugriff scheitert) -> App bricht nicht ab und merged', async () => {
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    dataJsonAusliefern({
+      updatedAt: '2026-08-25T18:30:00Z',
+      data: { etappen: [{ id: 1, name: 'Reims' }] },
+    })
+
+    const echtesGetItem = window.localStorage.getItem.bind(window.localStorage)
+    const spion = vi.spyOn(window.localStorage, 'getItem').mockImplementation((key) => {
+      if (key === STAMP_KEY) throw new Error('Zugriff verweigert')
+      return echtesGetItem(key)
+    })
+
+    try {
+      render(<App />)
+      await appIstGeladen()
+
+      expect(screen.queryByText('Reims (mein Name)')).toBeNull()
+      expect(gespeichert(ETAPPEN_KEY)[0].name).toBe('Reims')
+    } finally {
+      spion.mockRestore()
+    }
+    expect(marke()).toBe('2026-08-25T18:30:00Z')
+  })
+
+  it('Nutzerpfad: data.json ohne updatedAt -> es wird gemergt wie bisher, ohne Marke', async () => {
+    window.localStorage.setItem(
+      ETAPPEN_KEY,
+      JSON.stringify([{ id: 1, name: 'Reims (mein Name)' }]),
+    )
+    // Kein Top-Level-updatedAt - genau die Lage der Tests weiter oben.
+    dataJsonAusliefern({ data: { etappen: [{ id: 1, name: 'Reims' }] } })
+
+    render(<App />)
+    await appIstGeladen()
+
+    // Ohne Kennung laesst sich kein Stand unterscheiden, also bleibt es beim
+    // alten Verhalten - und es wird ausdruecklich KEINE Marke gesetzt.
+    expect(marke()).toBeNull()
+    expect(gespeichert(ETAPPEN_KEY)[0].name).toBe('Reims')
   })
 })
