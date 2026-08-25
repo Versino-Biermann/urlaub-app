@@ -1,11 +1,6 @@
 import { useState, useRef } from 'react'
-import {
-  baueBackup,
-  backupDateiname,
-  BACKUP_DATEI_TYP,
-  BEREICH_NAMEN,
-  benenneFehler,
-} from '../backup'
+import DefektHinweis from './DefektHinweis'
+import { baueBackup, backupDateiname, BACKUP_DATEI_TYP, benenneFehler } from '../backup'
 
 // Zweiter Sicherungsweg - bewusst OHNE die Download-Mechanik.
 //
@@ -189,15 +184,7 @@ function BackupShare() {
         Backup als Text anzeigen
       </button>
 
-      {defekte.length > 0 ? (
-        <p className="backup-share-warnung" role="alert">
-          {`Achtung: ${defekte.length} von ${Object.keys(BEREICH_NAMEN).length} Bereichen konnten nicht gelesen werden und stehen im Backup leer: `}
-          {defekte
-            .map((eintrag) => `${BEREICH_NAMEN[eintrag.bereich] || eintrag.bereich} (${eintrag.grund})`)
-            .join(', ')}
-          .
-        </p>
-      ) : null}
+      <DefektHinweis defekte={defekte} />
 
       {meldung ? (
         <p className={istFehler ? 'backup-error' : 'backup-share-meldung'} role="status">
