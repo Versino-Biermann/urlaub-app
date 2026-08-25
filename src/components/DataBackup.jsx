@@ -101,7 +101,11 @@ function DataBackup() {
 
   return (
     <div className="backup-bar">
-      <span className="backup-hint">Daten liegen nur lokal in diesem Browser.</span>
+      <span className="backup-hint">
+        Daten liegen nur lokal in diesem Browser. Beim Neuladen gewinnt der veröffentlichte
+        Stand: Änderungen und Löschungen an bestehenden Einträgen werden verworfen, nur neu
+        angelegte Einträge bleiben.
+      </span>
       <button type="button" onClick={handleExport}>
         Backup exportieren
       </button>
