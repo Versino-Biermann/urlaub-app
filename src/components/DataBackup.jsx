@@ -4,7 +4,7 @@ import DefektHinweis from './DefektHinweis'
 // Backup-Format, Leseweg und Dateinamens-Bildung liegen in src/backup.js, damit
 // Download-Export und Teilen-Weg dieselbe Quelle benutzen. Zwei Kopien der
 // Schluesselliste laufen auseinander, sobald ein Bereich dazukommt.
-import { baueBackup, formatDateForFilename } from '../backup'
+import { STORAGE_KEYS, baueBackup, formatDateForFilename } from '../backup'
 
 function DataBackup() {
   const [errorText, setErrorText] = useState('')
@@ -71,8 +71,23 @@ function DataBackup() {
       }
 
       location.reload()
-    } catch {
-      setErrorText('Die Backup-Datei konnte nicht gelesen werden.')
+    } catch (fehler) {
+      // Der breite Fangbereich hat den fehlenden STORAGE_KEYS-Import
+      // verschluckt: die Datei war einwandfrei gelesen und geparst, der
+      // ReferenceError flog erst beim Schreiben - und die Meldung schob es
+      // auf die Datei. Ein Programmierfehler und eine beschaedigte Datei
+      // duerfen fuer den Nutzer nicht identisch aussehen.
+      //
+      // Der Ablauf bleibt unveraendert (lesen, pruefen, bestaetigen,
+      // schreiben, neu laden); es aendert sich nur, WAS gemeldet wird.
+      console.error('Backup-Import fehlgeschlagen:', fehler)
+      const istProgrammfehler =
+        fehler instanceof ReferenceError || fehler instanceof TypeError
+      setErrorText(
+        istProgrammfehler
+          ? `Interner Fehler beim Wiederherstellen (${fehler.name}). Die Datei ist in Ordnung – bitte den Fehler melden.`
+          : 'Die Backup-Datei konnte nicht gelesen werden.',
+      )
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
