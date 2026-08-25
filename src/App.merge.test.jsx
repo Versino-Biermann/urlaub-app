@@ -340,14 +340,18 @@ describe('Startup-Merge: Merkmarke aus updatedAt', () => {
 
     // Der dritte Schluessel der Schleife (route) scheitert - die Schleife
     // bricht ab, nachdem etappen bereits geschrieben wurde.
-    const echtesSetItem = window.localStorage.setItem.bind(window.localStorage)
+    // Der Spy MUSS an Storage.prototype haengen. Ein Spy direkt auf
+    // window.localStorage greift nicht: jsdom liefert dort einen Proxy, der
+    // eigene Property-Zuweisungen als gespeicherte Werte behandelt statt als
+    // Methodenersatz - die Attrappe wird dann nie aufgerufen.
+    const echtesSetItem = Storage.prototype.setItem
     const spion = vi
-      .spyOn(window.localStorage, 'setItem')
-      .mockImplementation((key, value) => {
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(function (key, value) {
         if (key === 'urlaub-app.route') {
           throw new DOMException('voll', 'QuotaExceededError')
         }
-        echtesSetItem(key, value)
+        echtesSetItem.call(this, key, value)
       })
 
     try {
@@ -391,10 +395,11 @@ describe('Startup-Merge: Merkmarke aus updatedAt', () => {
       data: { etappen: [{ id: 1, name: 'Reims' }] },
     })
 
-    const echtesGetItem = window.localStorage.getItem.bind(window.localStorage)
-    const spion = vi.spyOn(window.localStorage, 'getItem').mockImplementation((key) => {
+    // Auch hier: Spy an Storage.prototype, nicht an window.localStorage.
+    const echtesGetItem = Storage.prototype.getItem
+    const spion = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (key) {
       if (key === STAMP_KEY) throw new Error('Zugriff verweigert')
-      return echtesGetItem(key)
+      return echtesGetItem.call(this, key)
     })
 
     try {
