@@ -1,30 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
+import { useListe } from '../useListe'
 
-const STORAGE_KEY = 'urlaub-app.sightseeing'
 const STATUS = ['geplant', 'besucht']
-
-function loadSpots() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
 
 function emptyForm() {
   return { titel: '', ort: '', kategorie: '', notiz: '', link: '', status: STATUS[0], etappeId: '' }
-}
-
-function loadEtappenListe() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.etappen')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
 }
 
 const OHNE_ETAPPE = '__ohne-etappe__'
@@ -38,41 +21,37 @@ function matchesEtappeFilter(eintrag, filter) {
 }
 
 export default function Sightseeing() {
-  const [spots, setSpots] = useState(loadSpots)
+  const liste = useListe('sightseeing')
+  const spots = liste.eintraege
+  // Nur lesend: die Etappen liefern die Auswahl fuer Filter und Zuordnung.
+  const etappenListe = useListe('etappen').eintraege
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [etappeFilter, setEtappeFilter] = useState('')
-  const etappenListe = loadEtappenListe()
   const gefilterteSpots = spots.filter((s) => matchesEtappeFilter(s, etappeFilter))
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(spots))
-  }, [spots])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.titel.trim()) return
     if (editId !== null) {
-      setSpots((prev) =>
-        prev.map((s) => (s.id === editId ? { ...s, ...form } : s)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neuerSpot = { id: Date.now(), ...form }
-    setSpots((prev) => [...prev, neuerSpot])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(spot) {
+  async function handleDelete(spot) {
     if (!window.confirm(`Sehenswürdigkeit "${spot.titel}" wirklich löschen?`)) return
-    setSpots((prev) => prev.filter((s) => s.id !== spot.id))
+    await liste.loeschen(spot.id)
   }
 
   function handleEdit(spot) {
@@ -85,19 +64,26 @@ export default function Sightseeing() {
     setForm(emptyForm())
   }
 
-  function toggleStatus(id) {
-    setSpots((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? { ...s, status: s.status === 'geplant' ? 'besucht' : 'geplant' }
-          : s,
-      ),
-    )
+  async function toggleStatus(id) {
+    const spot = spots.find((s) => String(s.id) === String(id))
+    if (!spot) return
+    await liste.aendern(id, {
+      ...spot,
+      status: spot.status === 'geplant' ? 'besucht' : 'geplant',
+    })
   }
 
   return (
     <section>
       <h2>Sehenswürdigkeiten</h2>
+
+      <Datenstand
+        laden={liste.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie}
+        stand={liste.stand}
+        schreibFehler={liste.schreibFehler}
+      />
 
       {etappenListe.length > 0 && (
         <div className="list-filter">
@@ -118,7 +104,7 @@ export default function Sightseeing() {
         </div>
       )}
 
-      {spots.length === 0 ? (
+      {liste.laden || liste.ladeFehler ? null : spots.length === 0 ? (
         <p className="empty">Noch keine Sehenswürdigkeiten erfasst.</p>
       ) : gefilterteSpots.length === 0 ? (
         <p className="empty">Keine Sehenswürdigkeiten für diese Etappe.</p>
