@@ -1,82 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
 import { formatDate, sortByDate } from '../format'
+import { useListe, useListen } from '../useListe'
 
-const STORAGE_KEY = 'urlaub-app.etappen'
-
-function loadEtappen() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function loadBookings() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.bookings')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function loadRoute() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.route')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function loadSightseeing() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.sightseeing')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function loadEvents() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.events')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function loadRestaurants() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.restaurants')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+// Die fuenf Nebenlisten, die diese Ansicht ueber "etappeId" verknuepft.
+// Bewusst ausserhalb der Komponente: das Array behaelt so seine Identitaet
+// zwischen zwei Darstellungen und der Ladeeffekt laeuft nicht endlos nach.
+const NEBENLISTEN = ['bookings', 'route', 'sightseeing', 'events', 'restaurants']
 
 function emptyForm() {
   return { name: '', vonDatum: '', bisDatum: '', notiz: '', link: '' }
 }
 
 export default function Etappen() {
-  const [etappen, setEtappen] = useState(loadEtappen)
+  const liste = useListe('etappen')
+  const etappen = liste.eintraege
+  const neben = useListen(NEBENLISTEN)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(etappen))
-  }, [etappen])
-
-  const bookings = loadBookings()
-  const fahrten = loadRoute()
-  const sightseeing = loadSightseeing()
-  const events = loadEvents()
-  const restaurants = loadRestaurants()
+  const bookings = neben.daten.bookings || []
+  const fahrten = neben.daten.route || []
+  const sightseeing = neben.daten.sightseeing || []
+  const events = neben.daten.events || []
+  const restaurants = neben.daten.restaurants || []
   // Nur die Anzeige-Reihenfolge: chronologisch nach Start der Etappe.
   const sortierteEtappen = sortByDate(etappen, (e) => e.vonDatum)
 
@@ -85,25 +34,23 @@ export default function Etappen() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) return
     if (editId !== null) {
-      setEtappen((prev) =>
-        prev.map((e) => (e.id === editId ? { ...e, ...form } : e)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neueEtappe = { id: Date.now(), ...form }
-    setEtappen((prev) => [...prev, neueEtappe])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(etappe) {
+  async function handleDelete(etappe) {
     if (!window.confirm(`Etappe "${etappe.name}" wirklich löschen?`)) return
-    setEtappen((prev) => prev.filter((e) => e.id !== etappe.id))
+    await liste.loeschen(etappe.id)
   }
 
   function handleEdit(etappe) {
@@ -120,7 +67,15 @@ export default function Etappen() {
     <section>
       <h2>Etappen</h2>
 
-      {etappen.length === 0 ? (
+      <Datenstand
+        laden={liste.laden || neben.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie || neben.ausKopie}
+        stand={liste.stand || neben.stand}
+        schreibFehler={liste.schreibFehler}
+      />
+
+      {liste.laden || liste.ladeFehler ? null : etappen.length === 0 ? (
         <p className="empty">Noch keine Etappen erfasst.</p>
       ) : (
         <ul className="list">
