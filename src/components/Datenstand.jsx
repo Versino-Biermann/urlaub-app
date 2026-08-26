@@ -34,8 +34,10 @@ export default function Datenstand({
       */}
       {!laden && nichtGeladeneBereiche.length > 0 && (
         <p className="datenstand fehler" role="alert">
-          Achtung: {nichtGeladeneBereiche.length} von {bereicheGesamt} verknüpften Bereichen
-          konnten nicht geladen werden: {nichtGeladeneBereiche.join(', ')}. Für diese Bereiche
+          Achtung: {nichtGeladeneBereiche.length} von {bereicheGesamt} verknüpften Bereichen{' '}
+          {nichtGeladeneBereiche.length === 1 ? 'konnte' : 'konnten'} nicht geladen werden:{' '}
+          {nichtGeladeneBereiche.join(', ')}.{' '}
+          {nichtGeladeneBereiche.length === 1 ? 'Für diesen Bereich' : 'Für diese Bereiche'}{' '}
           bedeutet ein fehlender Eintrag in der Übersicht NICHT, dass keiner vorhanden ist.
         </p>
       )}
