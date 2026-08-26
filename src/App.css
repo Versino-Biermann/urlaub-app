@@ -28,10 +28,6 @@
   color: var(--color-text-muted);
 }
 
-.backup-import-label {
-  cursor: pointer;
-}
-
 .backup-error {
   color: var(--color-text-muted);
 }
@@ -358,3 +354,45 @@
     width: 100%;
   }
 }
+
+/* --- Schreibzugang und Datenstand ---------------------------------------
+   Bewusst minimal gehalten: nur so viel, dass die Meldungen lesbar sind und
+   sich vom Listeninhalt absetzen. Die gestalterische Feinarbeit gehoert
+   nicht hierher. */
+.schreibzugang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.schreibzugang-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.schreibzugang-hinweis {
+  width: 100%;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.datenstand {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.datenstand.fehler {
+  border-color: #d93025;
+}
+
