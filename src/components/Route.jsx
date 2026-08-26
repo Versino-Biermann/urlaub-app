@@ -1,31 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
 import { formatDate, sortByDate } from '../format'
 import { routenUrl, ortsUrl, karteEinbettenUrl } from '../maps'
-
-const STORAGE_KEY = 'urlaub-app.route'
-
-function loadEtappen() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+import { useListe } from '../useListe'
 
 function emptyForm() {
   return { von: '', nach: '', datum: '', distanz: '', notiz: '', link: '', etappeId: '' }
-}
-
-function loadEtappenListe() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.etappen')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
 }
 
 const OHNE_ETAPPE = '__ohne-etappe__'
@@ -39,43 +21,39 @@ function matchesEtappeFilter(eintrag, filter) {
 }
 
 export default function Route() {
-  const [etappen, setEtappen] = useState(loadEtappen)
+  const liste = useListe('route')
+  const etappen = liste.eintraege
+  // Nur lesend: die Etappen liefern die Auswahl fuer Filter und Zuordnung.
+  const etappenListe = useListe('etappen').eintraege
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [etappeFilter, setEtappeFilter] = useState('')
-  const etappenListe = loadEtappenListe()
   // Nur die Anzeige-Reihenfolge: chronologisch nach Fahrt-Datum.
   const sortierteFahrten = sortByDate(etappen, (f) => f.datum)
   const gefilterteFahrten = sortierteFahrten.filter((f) => matchesEtappeFilter(f, etappeFilter))
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(etappen))
-  }, [etappen])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.von.trim() || !form.nach.trim()) return
     if (editId !== null) {
-      setEtappen((prev) =>
-        prev.map((e) => (e.id === editId ? { ...e, ...form } : e)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neueEtappe = { id: Date.now(), ...form }
-    setEtappen((prev) => [...prev, neueEtappe])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(fahrt) {
+  async function handleDelete(fahrt) {
     if (!window.confirm(`Fahrt "${fahrt.von} → ${fahrt.nach}" wirklich löschen?`)) return
-    setEtappen((prev) => prev.filter((e) => e.id !== fahrt.id))
+    await liste.loeschen(fahrt.id)
   }
 
   function handleEdit(fahrt) {
@@ -91,6 +69,14 @@ export default function Route() {
   return (
     <section>
       <h2>Reiseroute</h2>
+
+      <Datenstand
+        laden={liste.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie}
+        stand={liste.stand}
+        schreibFehler={liste.schreibFehler}
+      />
 
       {etappenListe.length > 0 && (
         <div className="list-filter">
