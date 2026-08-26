@@ -96,7 +96,7 @@ export default function Events() {
         </div>
       )}
 
-      {events.length === 0 ? (
+      {liste.laden || liste.ladeFehler ? null : events.length === 0 ? (
         <p className="empty">Noch keine Events erfasst.</p>
       ) : gefilterteEvents.length === 0 ? (
         <p className="empty">Keine Events für diese Etappe.</p>
