@@ -70,6 +70,20 @@ export function useListe(name) {
     }
   }, [name])
 
+  // Die Offline-Kopie nachfuehren, sobald sich die Liste geaendert hat.
+  //
+  // Drei Sperren, alle noetig:
+  //   laden      - waehrend des ersten Ladens ist eintraege noch leer; ohne
+  //                die Sperre wuerde eine vorhandene Kopie geloescht.
+  //   ladeFehler - eine leere Liste nach einem Fehler ist kein gueltiger Stand.
+  //   ausKopie   - wird die Kopie selbst angezeigt, darf sie nicht mit einem
+  //                neuen Zeitstempel ueberschrieben werden. Sonst behauptet
+  //                die Anzeige einen Stand von "gerade eben".
+  useEffect(() => {
+    if (laden || ladeFehler || ausKopie) return
+    db.kopieAktualisieren(name, eintraege)
+  }, [name, eintraege, laden, ladeFehler, ausKopie])
+
   const anlegen = useCallback(
     async (werte) => {
       setSchreibFehler('')

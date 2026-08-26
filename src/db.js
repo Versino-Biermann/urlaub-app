@@ -141,6 +141,13 @@ function kopieSchreiben(liste, eintraege) {
   }
 }
 
+// Kopie nachfuehren, nachdem die App selbst etwas geaendert hat. Ohne das
+// waere die Kopie nach einem Anlegen oder Loeschen einen Schritt hinterher.
+export function kopieAktualisieren(liste, eintraege) {
+  if (!Array.isArray(eintraege)) return
+  kopieSchreiben(liste, eintraege)
+}
+
 // Liefert { eintraege, stand } oder null, wenn keine brauchbare Kopie da ist.
 export function kopieLesen(liste) {
   try {
