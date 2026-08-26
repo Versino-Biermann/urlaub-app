@@ -1,31 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
 import { formatDate } from '../format'
+import { useListe } from '../useListe'
 
-const STORAGE_KEY = 'urlaub-app.events'
 const STATUS = ['geplant', 'gebucht']
-
-function loadEvents() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
 
 function emptyForm() {
   return { titel: '', datum: '', ort: '', kontakt: '', status: STATUS[0], notiz: '', link: '', etappeId: '' }
-}
-
-function loadEtappenListe() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.etappen')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
 }
 
 const OHNE_ETAPPE = '__ohne-etappe__'
@@ -39,41 +22,37 @@ function matchesEtappeFilter(eintrag, filter) {
 }
 
 export default function Events() {
-  const [events, setEvents] = useState(loadEvents)
+  const liste = useListe('events')
+  const events = liste.eintraege
+  // Nur lesend: die Etappen liefern die Auswahl fuer Filter und Zuordnung.
+  const etappenListe = useListe('etappen').eintraege
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [etappeFilter, setEtappeFilter] = useState('')
-  const etappenListe = loadEtappenListe()
   const gefilterteEvents = events.filter((ev) => matchesEtappeFilter(ev, etappeFilter))
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
-  }, [events])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.titel.trim()) return
     if (editId !== null) {
-      setEvents((prev) =>
-        prev.map((ev) => (ev.id === editId ? { ...ev, ...form } : ev)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neuesEvent = { id: Date.now(), ...form }
-    setEvents((prev) => [...prev, neuesEvent])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(event) {
+  async function handleDelete(event) {
     if (!window.confirm(`Event "${event.titel}" wirklich löschen?`)) return
-    setEvents((prev) => prev.filter((ev) => ev.id !== event.id))
+    await liste.loeschen(event.id)
   }
 
   function handleEdit(event) {
@@ -89,6 +68,14 @@ export default function Events() {
   return (
     <section>
       <h2>Events</h2>
+
+      <Datenstand
+        laden={liste.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie}
+        stand={liste.stand}
+        schreibFehler={liste.schreibFehler}
+      />
 
       {etappenListe.length > 0 && (
         <div className="list-filter">
