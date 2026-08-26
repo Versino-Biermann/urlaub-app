@@ -1,22 +1,20 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
+import { LISTEN, kopieLesen } from '../db'
 
-const STORAGE_KEYS = {
-  etappen: 'urlaub-app.etappen',
-  bookings: 'urlaub-app.bookings',
-  route: 'urlaub-app.route',
-  sightseeing: 'urlaub-app.sightseeing',
-  events: 'urlaub-app.events',
-  restaurants: 'urlaub-app.restaurants',
-}
-
-function readKeyRaw(storageKey) {
-  try {
-    const raw = localStorage.getItem(storageKey)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+// Sicherungs-Export.
+//
+// Zwei Entscheidungen, die man dem Knopf nicht ansieht:
+//
+// 1. Die Daten kommen aus der Offline-Kopie im Browserspeicher, nicht aus
+//    einem eigenen Netzabruf. Die Kopie wird von der Datenschicht bei jedem
+//    erfolgreichen Ladevorgang und nach jeder Aenderung nachgefuehrt - sie
+//    enthaelt also genau das, was die App anzeigt. Und weil das Lesen
+//    synchron ist, steht vor dem Klick auf den Download keine await-Kette.
+//    Das ist Absicht: iOS Safari ignoriert einen Anker-Klick mit Blob-Adresse
+//    still, wenn er nicht mehr im echten Ereignis-Handler steckt.
+//
+// 2. Der Import ist ersatzlos entfallen - Begruendung siehe unten beim
+//    Hinweistext.
 
 function formatDateForFilename(date) {
   const yyyy = date.getFullYear()
@@ -26,14 +24,29 @@ function formatDateForFilename(date) {
 }
 
 function DataBackup() {
-  const [errorText, setErrorText] = useState('')
-  const fileInputRef = useRef(null)
+  const [warnung, setWarnung] = useState('')
 
   const handleExport = () => {
     const data = {}
-    for (const [dataKey, storageKey] of Object.entries(STORAGE_KEYS)) {
-      data[dataKey] = readKeyRaw(storageKey)
+    const fehlend = []
+    for (const liste of LISTEN) {
+      const kopie = kopieLesen(liste)
+      if (kopie) {
+        data[liste] = kopie.eintraege
+      } else {
+        // Kein Stand vorhanden: der Bereich wurde in diesem Browser noch nie
+        // geladen. Das gehoert benannt, sonst sieht das Backup vollstaendig
+        // aus und ist es nicht.
+        data[liste] = []
+        fehlend.push(liste)
+      }
     }
+
+    setWarnung(
+      fehlend.length > 0
+        ? `Achtung: ${fehlend.length} von ${LISTEN.length} Bereichen liegen in diesem Browser noch nicht vor und stehen im Backup leer: ${fehlend.join(', ')}. Bitte die App einmal mit Verbindung öffnen und erneut exportieren.`
+        : '',
+    )
 
     const backup = {
       app: 'urlaub-app',
@@ -55,67 +68,19 @@ function DataBackup() {
     URL.revokeObjectURL(url)
   }
 
-  const handleImportChange = async (event) => {
-    const file = event.target.files && event.target.files[0]
-    if (!file) return
-
-    setErrorText('')
-
-    try {
-      const text = await file.text()
-      let parsed
-      try {
-        parsed = JSON.parse(text)
-      } catch {
-        setErrorText('Die ausgewählte Datei ist kein gültiges JSON.')
-        return
-      }
-
-      if (!parsed || typeof parsed !== 'object' || typeof parsed.data !== 'object' || parsed.data === null) {
-        setErrorText('Die Backup-Datei hat kein gültiges Format.')
-        return
-      }
-
-      const confirmed = window.confirm(
-        'Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?'
-      )
-      if (!confirmed) {
-        return
-      }
-
-      for (const [dataKey, storageKey] of Object.entries(STORAGE_KEYS)) {
-        if (Object.prototype.hasOwnProperty.call(parsed.data, dataKey)) {
-          localStorage.setItem(storageKey, JSON.stringify(parsed.data[dataKey]))
-        }
-      }
-
-      location.reload()
-    } catch {
-      setErrorText('Die Backup-Datei konnte nicht gelesen werden.')
-    } finally {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-  }
-
   return (
     <div className="backup-bar">
-      <span className="backup-hint">Daten liegen nur lokal in diesem Browser.</span>
+      <span className="backup-hint">
+        Die Daten liegen in der Datenbank. Der Export ist eine Sicherungskopie zum Mitnehmen.
+      </span>
       <button type="button" onClick={handleExport}>
         Backup exportieren
       </button>
-      <label className="backup-import-label">
-        Backup importieren
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          onChange={handleImportChange}
-          style={{ display: 'none' }}
-        />
-      </label>
-      {errorText ? <span className="backup-error">{errorText}</span> : null}
+      {warnung ? (
+        <span className="backup-error" role="alert">
+          {warnung}
+        </span>
+      ) : null}
     </div>
   )
 }
