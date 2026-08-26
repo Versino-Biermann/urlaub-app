@@ -97,7 +97,7 @@ export default function Route() {
         </div>
       )}
 
-      {etappen.length === 0 ? (
+      {liste.laden || liste.ladeFehler ? null : etappen.length === 0 ? (
         <p className="empty">Noch keine Fahrten erfasst.</p>
       ) : gefilterteFahrten.length === 0 ? (
         <p className="empty">Keine Fahrten für diese Etappe.</p>
