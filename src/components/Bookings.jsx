@@ -1,31 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
 import { formatDate, sortByDate } from '../format'
+import { useListe } from '../useListe'
 
-const STORAGE_KEY = 'urlaub-app.bookings'
 const TYPES = ['Flug', 'Unterkunft', 'Mietwagen', 'Transfer']
-
-function loadBookings() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
 
 function emptyForm() {
   return { titel: '', typ: TYPES[0], datum: '', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' }
-}
-
-function loadEtappenListe() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.etappen')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
 }
 
 const OHNE_ETAPPE = '__ohne-etappe__'
@@ -39,44 +22,40 @@ function matchesEtappeFilter(eintrag, filter) {
 }
 
 export default function Bookings() {
-  const [bookings, setBookings] = useState(loadBookings)
+  const liste = useListe('bookings')
+  const bookings = liste.eintraege
+  // Nur lesend: die Etappen liefern die Auswahl fuer Filter und Zuordnung.
+  const etappenListe = useListe('etappen').eintraege
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [etappeFilter, setEtappeFilter] = useState('')
-  const etappenListe = loadEtappenListe()
   // Nur die Anzeige-Reihenfolge: chronologisch entlang der Reise.
   // Unterkuenfte haengen an checkIn, alles andere an datum.
   const sortierteBookings = sortByDate(bookings, (b) => b.checkIn || b.datum)
   const gefilterteBookings = sortierteBookings.filter((b) => matchesEtappeFilter(b, etappeFilter))
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings))
-  }, [bookings])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.titel.trim()) return
     if (editId !== null) {
-      setBookings((prev) =>
-        prev.map((b) => (b.id === editId ? { ...b, ...form } : b)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neueBuchung = { id: Date.now(), ...form }
-    setBookings((prev) => [...prev, neueBuchung])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(buchung) {
+  async function handleDelete(buchung) {
     if (!window.confirm(`Buchung "${buchung.titel}" wirklich löschen?`)) return
-    setBookings((prev) => prev.filter((b) => b.id !== buchung.id))
+    await liste.loeschen(buchung.id)
   }
 
   function handleEdit(booking) {
@@ -92,6 +71,14 @@ export default function Bookings() {
   return (
     <section>
       <h2>Buchungen</h2>
+
+      <Datenstand
+        laden={liste.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie}
+        stand={liste.stand}
+        schreibFehler={liste.schreibFehler}
+      />
 
       {etappenListe.length > 0 && (
         <div className="list-filter">
@@ -112,7 +99,7 @@ export default function Bookings() {
         </div>
       )}
 
-      {bookings.length === 0 ? (
+      {liste.laden || liste.ladeFehler ? null : bookings.length === 0 ? (
         <p className="empty">Noch keine Buchungen erfasst.</p>
       ) : gefilterteBookings.length === 0 ? (
         <p className="empty">Keine Buchungen für diese Etappe.</p>
