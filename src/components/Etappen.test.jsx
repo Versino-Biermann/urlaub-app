@@ -2,7 +2,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Etappen from './Etappen'
-import { dbAttrappeAufsetzen, geheimnisSetzenFuerTest } from '../test/dbAttrappe'
+import {
+  dbAttrappeAufsetzen,
+  dbAttrappeOhneNetz,
+  kopieSetzen,
+  geheimnisSetzenFuerTest,
+} from '../test/dbAttrappe'
 
 // Verhaltenstests fuer den Bereich "Etappen".
 //
@@ -260,6 +265,48 @@ describe('Etappen verknuepfen die anderen Listen ueber etappeId', () => {
     expect(eintrag.textContent).toContain('Boulingrin')
     // Abwesenheit: "keine" darf gerade NICHT dastehen.
     expect(screen.queryByText('keine')).toBeNull()
+  })
+
+  it('Nutzerpfad: eine nicht ladbare Nebenliste erscheint als Stoerung, NICHT als leer', async () => {
+    // Der Fall aus Frankreich: kein Empfang. Fuer fuenf Bereiche liegt eine
+    // Kopie auf dem Geraet, ausgerechnet fuer die Restaurants nicht - dieser
+    // Bereich wurde in diesem Browser noch nie geladen.
+    kopieSetzen('etappen', [
+      { id: '1', name: 'Reims', vonDatum: '', bisDatum: '', notiz: '', link: '' },
+    ])
+    kopieSetzen('bookings', [{ id: '11', titel: 'Hotel Reims', typ: 'Unterkunft', etappeId: '1' }])
+    kopieSetzen('route', [])
+    kopieSetzen('sightseeing', [])
+    kopieSetzen('events', [])
+    // restaurants: absichtlich KEINE Kopie
+    db = dbAttrappeOhneNetz()
+    render(<Etappen />)
+
+    await screen.findByText('Reims')
+
+    // Der eigentliche Befund: die App muss sagen, dass sie es nicht weiss.
+    const meldungen = await screen.findAllByRole('alert')
+    const text = meldungen.map((m) => m.textContent).join(' ')
+    expect(text).toContain('1 von 5')
+    expect(text).toContain('Restaurants')
+    expect(text).toContain('NICHT, dass keiner vorhanden ist')
+
+    // Und sie darf den Ausfall nicht als Wahrheit ausgeben: die geladene
+    // Buchung steht da, die Restaurants-Zeile fehlt - aber eben mit Hinweis.
+    expect(screen.getByRole('listitem').textContent).toContain('Hotel Reims')
+  })
+
+  it('Nutzerpfad: laedt alles durch, erscheint KEIN Stoerungshinweis', async () => {
+    // Gegenprobe zum Test darueber - sonst koennte der Hinweis immer dastehen.
+    aufsetzen(
+      [{ id: '1', name: 'Reims', vonDatum: '', bisDatum: '', notiz: '', link: '' }],
+      { restaurants: [{ id: '51', name: 'Boulingrin', etappeId: '1' }] },
+    )
+    render(<Etappen />)
+
+    await screen.findByText('Reims')
+    expect(screen.queryByText(/konnten nicht geladen werden/)).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('Nutzerpfad: eine Etappe ohne Zuordnungen zeigt ausdruecklich "keine"', async () => {
