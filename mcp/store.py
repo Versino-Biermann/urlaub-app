@@ -489,6 +489,7 @@ def add_entry(
     - vergibt eine Kennung im Frontend-Format, falls ``id`` None ist
     - fuellt fehlende Felder aus dem Template mit ""
     - validiert Kategorie und erlaubte Enum-Werte, bevor etwas gesendet wird
+    - wirft StoreError, wenn die Datenbank das Anlegen nicht bestaetigt
     """
     _check_category(kategorie)
     _validate_enums(kategorie, felder)
@@ -505,7 +506,16 @@ def add_entry(
     )
     if isinstance(zeilen, list) and zeilen:
         return zeilen[0]
-    return entry
+    # Kein Rueckgabe-Datensatz trotz "Prefer: return=representation" heisst:
+    # die Datenbank hat das Anlegen nicht bestaetigt. Frueher wurde hier der
+    # lokal gebaute Eintrag zurueckgegeben - damit sah ein nicht bestaetigtes
+    # Anlegen wie ein Erfolg aus, und der Aufrufer meldete "eingetragen",
+    # obwohl unterwegs nichts angekommen war. update_entry und delete_entry
+    # behandeln denselben Fall als Fehler; add_entry tut es jetzt auch.
+    raise StoreError(
+        f"Die Datenbank hat das Anlegen in '{kategorie}' nicht bestaetigt. "
+        f"Der Eintrag gilt als NICHT gespeichert."
+    )
 
 
 def find_entry(kategorie: str, id: str) -> dict[str, Any] | None:

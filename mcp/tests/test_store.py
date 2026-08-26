@@ -75,7 +75,17 @@ class Gegenstelle:
         self.anfragen.append(anfrage)
         if self.fehler is not None:
             raise self.fehler
-        nutzlast = self.antworten.pop(0) if self.antworten else []
+        if self.antworten:
+            nutzlast = self.antworten.pop(0)
+        else:
+            # Ohne vorgegebene Antwort verhaelt sich die Gegenstelle wie die
+            # echte Datenbank mit "Prefer: return=representation": ein
+            # Schreibvorgang gibt die gespeicherte Zeile zurueck, ein
+            # Lesevorgang eine leere Liste. Eine leere Antwort auf einen
+            # Schreibvorgang ist ein Sonderfall und muss im Test ausdruecklich
+            # mit antwortet([]) verlangt werden - sonst wuerde der Normalfall
+            # versehentlich den Fehlerpfad testen.
+            nutzlast = [json.loads(anfrage.data.decode("utf-8"))] if anfrage.data else []
         if isinstance(nutzlast, str):
             return _Antwort(nutzlast)
         return _Antwort(json.dumps(nutzlast, ensure_ascii=False))
@@ -215,7 +225,6 @@ def test_neue_kennung_sortiert_chronologisch():
 
 
 def test_add_entry_vergibt_kennung_im_frontend_format(netz):
-    netz.antwortet([])
     store.add_entry("etappen", {"name": "Rom"})
     gesendet = netz.letzter_rumpf()
     zeit, _, zufall = gesendet["id"].partition("-")
@@ -228,13 +237,11 @@ def test_add_entry_vergibt_kennung_im_frontend_format(netz):
 
 
 def test_add_entry_respects_given_id(netz):
-    netz.antwortet([])
     store.add_entry("etappen", {"name": "Rom"}, id="fixed123")
     assert netz.letzter_rumpf()["id"] == "fixed123"
 
 
 def test_add_entry_fills_missing_fields_with_empty_string(netz):
-    netz.antwortet([])
     store.add_entry("restaurants", {"name": "Da Enzo"})
     gesendet = netz.letzter_rumpf()
     template = store.CATEGORY_TEMPLATES["restaurants"]
@@ -248,7 +255,6 @@ def test_add_entry_fills_missing_fields_with_empty_string(netz):
 
 
 def test_add_entry_ignores_unknown_fields(netz):
-    netz.antwortet([])
     store.add_entry("etappen", {"name": "Rom", "spam": "x"})
     assert "spam" not in netz.letzter_rumpf()
 
@@ -260,13 +266,11 @@ def test_add_entry_unknown_category_raises(netz):
 
 
 def test_add_entry_valid_enum_ok(netz):
-    netz.antwortet([])
     store.add_entry("bookings", {"titel": "LH123", "typ": "Flug"})
     assert netz.letzter_rumpf()["typ"] == "Flug"
 
 
 def test_add_entry_empty_enum_ok(netz):
-    netz.antwortet([])
     store.add_entry("bookings", {"titel": "X"})
     assert netz.letzter_rumpf()["typ"] == ""
 
@@ -283,11 +287,37 @@ def test_add_entry_invalid_enum_raises(netz):
 
 
 def test_events_and_sightseeing_have_distinct_status_enums(netz):
-    netz.antwortet([], [])
     store.add_entry("events", {"titel": "X", "status": "gebucht"})
     store.add_entry("sightseeing", {"titel": "Y", "status": "besucht"})
     with pytest.raises(store.StoreError):
         store.add_entry("events", {"titel": "Z", "status": "besucht"})
+
+
+def test_add_entry_ohne_bestaetigung_meldet_fehler(netz):
+    # Antwortet die Datenbank auf ein Anlegen mit einer leeren Liste, ist der
+    # Eintrag nicht bestaetigt. Frueher kam hier der lokal gebaute Eintrag
+    # zurueck und der Aufrufer meldete "eingetragen", obwohl nichts
+    # gespeichert war. update_entry und delete_entry werfen in derselben
+    # Lage einen Fehler - add_entry muss das auch tun.
+    netz.antwortet([])
+    with pytest.raises(store.StoreError) as exc:
+        store.add_entry("etappen", {"name": "Rom"})
+    assert "nicht bestaetigt" in str(exc.value)
+    assert "NICHT gespeichert" in str(exc.value)
+    assert "etappen" in str(exc.value)
+
+
+def test_die_drei_schreibwege_melden_fehlende_bestaetigung_gleich(netz):
+    # Der eigentliche Befund war die Uneinigkeit der drei Funktionen.
+    # Dieser Test haelt sie zusammen.
+    for aufruf in (
+        lambda: store.add_entry("etappen", {"name": "Rom"}),
+        lambda: store.update_entry("etappen", "1", {"notiz": "x"}),
+        lambda: store.delete_entry("etappen", "1"),
+    ):
+        netz.antwortet([])
+        with pytest.raises(store.StoreError):
+            aufruf()
 
 
 def test_add_entry_gibt_die_gespeicherte_zeile_zurueck(netz):
@@ -297,7 +327,6 @@ def test_add_entry_gibt_die_gespeicherte_zeile_zurueck(netz):
 
 
 def test_add_entry_fordert_nur_die_bekannten_spalten_an(netz):
-    netz.antwortet([])
     store.add_entry("etappen", {"name": "Rom"})
     adresse = netz.letzte.full_url
     assert "select=" + ",".join(store.FELDER["etappen"]) in adresse
