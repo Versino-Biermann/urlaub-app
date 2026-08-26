@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototyp: Datenbank-Zugriff aus dem Browser</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 12px;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  h2 { font-size: 17px; margin: 20px 0 8px; }
+  section { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+  button {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    font-family: inherit;
+    padding: 10px 12px;
+    margin-top: 8px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #f2f2f2;
+    cursor: pointer;
+  }
+  input {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    font-family: inherit;
+    padding: 8px 10px;
+    margin-top: 8px;
+    border: 1px solid #888;
+    border-radius: 6px;
+  }
+  label { display: block; margin-top: 10px; font-weight: 600; }
+  pre, code, .umbruch {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  #umgebung { font-size: 14px; background: #f7f7f7; border-color: #ddd; }
+  #umgebung div { margin-bottom: 6px; }
+  ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  li { border-top: 1px solid #eee; padding: 8px 0; overflow-wrap: anywhere; }
+  .meldung { margin-top: 10px; padding: 10px; border-radius: 6px; font-size: 15px; }
+  .ok    { background: #e6f4ea; border: 1px solid #34a853; }
+  .fehler{ background: #fdecea; border: 1px solid #d93025; }
+  .info  { background: #eef2fb; border: 1px solid #4a6fa5; }
+  #globalefehler:empty { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Prototyp: Datenbank-Zugriff aus dem Browser</h1>
+
+<section id="umgebung">
+  <div><strong>Adresse dieser Seite:</strong> <span id="u-href" class="umbruch"></span></div>
+  <div><strong>Herkunft:</strong> <span id="u-origin" class="umbruch"></span></div>
+  <div><strong>Browser:</strong> <span id="u-ua" class="umbruch"></span></div>
+  <div><strong>Datenbank:</strong> <span id="u-db" class="umbruch"></span></div>
+</section>
+
+<div id="globalefehler"></div>
+
+<section>
+  <h2>1. Liste laden</h2>
+  <button id="btn-laden" type="button">Liste laden</button>
+  <div id="melde-laden"></div>
+  <ul id="liste"></ul>
+</section>
+
+<section>
+  <h2>2. Geheimnis eingeben</h2>
+  <label for="feld-geheimnis">Schreibgeheimnis</label>
+  <input id="feld-geheimnis" type="password" autocomplete="off" placeholder="wird nur im Browserspeicher abgelegt">
+  <button id="btn-geheimnis" type="button">Geheimnis speichern</button>
+  <div id="melde-geheimnis"></div>
+</section>
+
+<section>
+  <h2>3. Testeintrag anlegen</h2>
+  <label for="feld-name">Name</label>
+  <input id="feld-name" type="text" value="Prototyp-Testlokal">
+  <label for="feld-ort">Ort</label>
+  <input id="feld-ort" type="text" value="Teststadt">
+  <button id="btn-anlegen" type="button">Testeintrag anlegen</button>
+  <div id="melde-anlegen"></div>
+</section>
+
+<section>
+  <h2>4. Testeintrag löschen</h2>
+  <label for="feld-kennung">Kennung des Testeintrags</label>
+  <input id="feld-kennung" type="text" placeholder="prototyp-test-...">
+  <button id="btn-loeschen" type="button">Testeintrag löschen</button>
+  <div id="melde-loeschen"></div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var DB_URL   = 'https://yrsdfiskfpefzqgoscze.supabase.co';
+  var DB_KEY   = 'sb_publishable_ZDpxCF_YHauqkktcx-z0_Q_paZnPWfi';
+  var TABELLE  = DB_URL + '/rest/v1/restaurants';
+  var SPEICHER_SCHLUESSEL = 'urlaub-app.schreibgeheimnis';
+  var TEST_PRAEFIX = 'prototyp-test-';
+
+  function el(id) { return document.getElementById(id); }
+
+  function melde(zielId, text, art) {
+    var ziel = el(zielId);
+    ziel.textContent = '';
+    var div = document.createElement('div');
+    div.className = 'meldung ' + art;
+    div.textContent = text;
+    ziel.appendChild(div);
+  }
+
+  function globalerFehler(text) {
+    var ziel = el('globalefehler');
+    var div = document.createElement('div');
+    div.className = 'meldung fehler';
+    div.textContent = 'Unbehandelter Fehler: ' + text;
+    ziel.appendChild(div);
+  }
+
+  // ---- globaler Fehlerfaenger -------------------------------------------
+  window.addEventListener('error', function (e) {
+    globalerFehler((e && e.message ? e.message : 'unbekannt') +
+      ' (' + (e && e.filename ? e.filename : '?') + ':' + (e && e.lineno ? e.lineno : '?') + ')');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var g = e && e.reason;
+    globalerFehler('abgewiesenes Versprechen: ' + (g && g.message ? g.message : String(g)));
+  });
+
+  // ---- Umgebung anzeigen ------------------------------------------------
+  el('u-href').textContent   = window.location.href;
+  el('u-origin').textContent = window.location.origin;
+  el('u-ua').textContent     = navigator.userAgent;
+  el('u-db').textContent     = DB_URL;
+
+  // ---- Geheimnis --------------------------------------------------------
+  function geheimnisLesen() {
+    try {
+      return window.localStorage.getItem(SPEICHER_SCHLUESSEL) || '';
+    } catch (fehler) {
+      globalerFehler('Browserspeicher nicht lesbar: ' + fehler.message);
+      return '';
+    }
+  }
+
+  function kopfzeilen(mitGeheimnis) {
+    var kopf = {
+      'apikey': DB_KEY,
+      'Authorization': 'Bearer ' + DB_KEY,
+      'Content-Type': 'application/json'
+    };
+    if (mitGeheimnis) {
+      kopf['x-urlaub-schreibgeheimnis'] = geheimnisLesen();
+    }
+    return kopf;
+  }
+
+  // Liest Antwort aus und liefert immer Status + Text.
+  function auswerten(antwort) {
+    return antwort.text().then(function (roh) {
+      return { status: antwort.status, ok: antwort.ok, roh: roh };
+    });
+  }
+
+  function fehlertext(e) {
+    return 'HTTP ' + e.status + ' — ' + (e.roh && e.roh.length ? e.roh : '(leerer Antworttext)');
+  }
+
+  // ---- 1. Liste laden ---------------------------------------------------
+  el('btn-laden').addEventListener('click', function () {
+    melde('melde-laden', 'Lade …', 'info');
+    el('liste').textContent = '';
+    fetch(TABELLE + '?select=id,name,ort&order=name', {
+      method: 'GET',
+      headers: kopfzeilen(false)
+    }).then(auswerten).then(function (e) {
+      if (!e.ok) {
+        melde('melde-laden', 'Lesen fehlgeschlagen. ' + fehlertext(e), 'fehler');
+        return;
+      }
+      var zeilen;
+      try {
+        zeilen = JSON.parse(e.roh);
+      } catch (fehler) {
+        melde('melde-laden', 'HTTP ' + e.status + ', aber Antwort ist kein gültiges JSON: ' + e.roh, 'fehler');
+        return;
+      }
+      var ul = el('liste');
+      zeilen.forEach(function (r) {
+        var li = document.createElement('li');
+        li.textContent = r.name + ' — ' + (r.ort || 'ohne Ort') + '  [Kennung: ' + r.id + ']';
+        ul.appendChild(li);
+      });
+      melde('melde-laden', 'HTTP ' + e.status + ' — ' + zeilen.length + ' Einträge gelesen.', 'ok');
+    }).catch(function (fehler) {
+      melde('melde-laden', 'Netzwerk- oder Herkunftsfehler beim Lesen: ' + fehler.message +
+        ' (kein HTTP-Status vorhanden — genau so sieht eine blockierte Herkunftsprüfung aus)', 'fehler');
+    });
+  });
+
+  // ---- 2. Geheimnis speichern -------------------------------------------
+  el('btn-geheimnis').addEventListener('click', function () {
+    var wert = el('feld-geheimnis').value;
+    if (!wert) {
+      melde('melde-geheimnis', 'Kein Wert eingegeben — nichts gespeichert.', 'fehler');
+      return;
+    }
+    try {
+      window.localStorage.setItem(SPEICHER_SCHLUESSEL, wert);
+      melde('melde-geheimnis', 'Geheimnis im Browserspeicher abgelegt (' + wert.length + ' Zeichen).', 'ok');
+      el('feld-geheimnis').value = '';
+    } catch (fehler) {
+      melde('melde-geheimnis', 'Speichern im Browserspeicher fehlgeschlagen: ' +
+        fehler.name + ' — ' + fehler.message, 'fehler');
+    }
+  });
+
+  // ---- 3. Testeintrag anlegen -------------------------------------------
+  el('btn-anlegen').addEventListener('click', function () {
+    var name = el('feld-name').value.trim();
+    var ort  = el('feld-ort').value.trim();
+    if (!name) {
+      melde('melde-anlegen', 'Bitte einen Namen eingeben.', 'fehler');
+      return;
+    }
+    // Kennung wird IMMER erzeugt, es gibt kein freies Kennungsfeld.
+    var kennung = TEST_PRAEFIX + Date.now();
+    if (!geheimnisLesen()) {
+      melde('melde-anlegen', 'Hinweis: kein Geheimnis gespeichert. Die Anfrage geht trotzdem raus, ' +
+        'damit die Abweisung sichtbar wird.', 'info');
+    }
+    fetch(TABELLE, {
+      method: 'POST',
+      headers: kopfzeilen(true),
+      body: JSON.stringify({ id: kennung, name: name, ort: ort })
+    }).then(auswerten).then(function (e) {
+      if (!e.ok) {
+        melde('melde-anlegen', 'Anlegen fehlgeschlagen. ' + fehlertext(e), 'fehler');
+        return;
+      }
+      el('feld-kennung').value = kennung;
+      melde('melde-anlegen', 'HTTP ' + e.status + ' — angelegt unter der Kennung ' + kennung +
+        '. Sie steht jetzt im Löschfeld.', 'ok');
+    }).catch(function (fehler) {
+      melde('melde-anlegen', 'Netzwerk- oder Herkunftsfehler beim Anlegen: ' + fehler.message +
+        ' (kein HTTP-Status vorhanden)', 'fehler');
+    });
+  });
+
+  // ---- 4. Testeintrag loeschen ------------------------------------------
+  el('btn-loeschen').addEventListener('click', function () {
+    var kennung = el('feld-kennung').value.trim();
+    if (!kennung) {
+      melde('melde-loeschen', 'Bitte eine Kennung eingeben.', 'fehler');
+      return;
+    }
+    // LOESCHSPERRE: nur selbst angelegte Testeintraege. Christofs echte
+    // Eintraege tragen dieses Praefix nicht und koennen nicht getroffen werden.
+    if (kennung.indexOf(TEST_PRAEFIX) !== 0) {
+      melde('melde-loeschen', 'Abgelehnt: Die Kennung "' + kennung + '" beginnt nicht mit "' +
+        TEST_PRAEFIX + '". Es wurde KEINE Anfrage an die Datenbank geschickt.', 'fehler');
+      return;
+    }
+    fetch(TABELLE + '?id=eq.' + encodeURIComponent(kennung), {
+      method: 'DELETE',
+      headers: kopfzeilen(true)
+    }).then(auswerten).then(function (e) {
+      if (!e.ok) {
+        melde('melde-loeschen', 'Löschen fehlgeschlagen. ' + fehlertext(e), 'fehler');
+        return;
+      }
+      melde('melde-loeschen', 'HTTP ' + e.status + ' — Löschanfrage für ' + kennung +
+        ' durchgelaufen. Zum Nachweis die Liste neu laden.', 'ok');
+    }).catch(function (fehler) {
+      melde('melde-loeschen', 'Netzwerk- oder Herkunftsfehler beim Löschen: ' + fehler.message +
+        ' (kein HTTP-Status vorhanden)', 'fehler');
+    });
+  });
+})();
+</script>
+</body>
+</html>
