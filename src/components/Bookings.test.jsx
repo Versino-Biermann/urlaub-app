@@ -1,39 +1,50 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Bookings from './Bookings'
+import { dbAttrappeAufsetzen, geheimnisSetzenFuerTest } from '../test/dbAttrappe'
 
 // Verhaltenstests fuer den Bereich "Buchungen".
 //
-// Wie bei den Etappen wird gepruefte, was der Nutzer tut und danach sieht.
+// Wie bei den Etappen wird geprueft, was der Nutzer tut und danach sieht.
 // Zusaetzlich zur Anlegen/Bearbeiten/Loeschen-Kette wird der Typwechsel
 // geprueft: bei "Unterkunft" erwartet der Nutzer Check-in/Check-out statt
 // eines einzelnen Datums.
+//
+// Datenquelle ist die Datenbank-Attrappe (src/test/dbAttrappe.js) - derselbe
+// Weg wie in allen anderen Testdateien.
 
-const STORAGE_KEY = 'urlaub-app.bookings'
-const ETAPPEN_KEY = 'urlaub-app.etappen'
+let db = null
+
+function aufsetzen(bookings = [], etappen = []) {
+  geheimnisSetzenFuerTest()
+  db = dbAttrappeAufsetzen({ bookings, etappen })
+  return db
+}
 
 function gespeicherteBuchungen() {
-  return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]')
+  return db.tabellen.bookings
 }
 
-function seedBuchungen(liste) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(liste))
-}
+afterEach(() => {
+  if (db) db.wiederherstellen()
+  db = null
+})
 
 describe('Buchungen anlegen', () => {
   it('Nutzerpfad: leere Liste -> Flug erfassen -> Buchung steht mit Typ-Kennzeichen in der Liste', async () => {
+    aufsetzen([])
     const user = userEvent.setup()
     render(<Bookings />)
 
-    expect(screen.getByText('Noch keine Buchungen erfasst.')).toBeTruthy()
+    expect(await screen.findByText('Noch keine Buchungen erfasst.')).toBeTruthy()
 
     await user.type(screen.getByLabelText('Titel'), 'Lufthansa LH123')
     await user.type(screen.getByLabelText('Datum'), '2026-08-15')
     await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
 
+    expect(await screen.findByText('Lufthansa LH123')).toBeTruthy()
     expect(screen.queryByText('Noch keine Buchungen erfasst.')).toBeNull()
-    expect(screen.getByText('Lufthansa LH123')).toBeTruthy()
     // Typ wird als Kennzeichen am Eintrag angezeigt, Datum in TT.MM.JJJJ.
     // Gelesen wird der Eintrag selbst, nicht "irgendwo auf der Seite" - das
     // Wort "Flug" steht auch als Auswahlmoeglichkeit im Typ-Feld.
@@ -50,8 +61,10 @@ describe('Buchungen anlegen', () => {
   })
 
   it('Nutzerpfad: Typ auf Unterkunft stellen -> Formular fragt Check-in und Check-out statt Datum', async () => {
+    aufsetzen([])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Noch keine Buchungen erfasst.')
 
     // Vor dem Wechsel: ein einzelnes Datumsfeld.
     // Die Abwesenheits-Pruefung steht absichtlich VOR der Anwesenheits-Pruefung:
@@ -72,7 +85,7 @@ describe('Buchungen anlegen', () => {
     await user.type(screen.getByLabelText('Check-out'), '2026-08-18')
     await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
 
-    expect(screen.getByText('Hotel de la Paix')).toBeTruthy()
+    expect(await screen.findByText('Hotel de la Paix')).toBeTruthy()
     expect(screen.getByText('Check-in: 15.08.2026')).toBeTruthy()
     expect(screen.getByText('Check-out: 18.08.2026')).toBeTruthy()
 
@@ -83,8 +96,10 @@ describe('Buchungen anlegen', () => {
   })
 
   it('Nutzerpfad: Absenden ohne Titel legt nichts an', async () => {
+    aufsetzen([])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Noch keine Buchungen erfasst.')
 
     await user.type(screen.getByLabelText('Notiz'), 'nur eine Notiz')
     await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
@@ -94,12 +109,10 @@ describe('Buchungen anlegen', () => {
   })
 
   it('Nutzerpfad: Buchung einer Etappe zuordnen -> Etappenname steht am Eintrag', async () => {
-    window.localStorage.setItem(
-      ETAPPEN_KEY,
-      JSON.stringify([{ id: 7, name: 'Reims' }]),
-    )
+    aufsetzen([], [{ id: '7', name: 'Reims' }])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Noch keine Buchungen erfasst.')
 
     await user.type(screen.getByLabelText('Titel'), 'Hotel de la Paix')
     // Es gibt zwei Auswahlfelder mit der Beschriftung "Etappe": den Listen-Filter
@@ -120,16 +133,16 @@ describe('Buchungen anlegen', () => {
     await user.selectOptions(zuordnung, '7')
     await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
 
-    expect(screen.getByText('Etappe: Reims')).toBeTruthy()
+    expect(await screen.findByText('Etappe: Reims')).toBeTruthy()
     expect(String(gespeicherteBuchungen()[0].etappeId)).toBe('7')
   })
 })
 
 describe('Buchungen bearbeiten', () => {
   it('Nutzerpfad: Bearbeiten -> Formular ist vorbelegt -> Titel aendern -> neuer Titel sichtbar', async () => {
-    seedBuchungen([
+    aufsetzen([
       {
-        id: 1,
+        id: '1',
         titel: 'Hotel de la Paix',
         typ: 'Unterkunft',
         datum: '',
@@ -142,6 +155,7 @@ describe('Buchungen bearbeiten', () => {
     ])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Hotel de la Paix')
 
     await user.click(screen.getByRole('button', { name: 'Bearbeiten' }))
 
@@ -156,12 +170,12 @@ describe('Buchungen bearbeiten', () => {
 
     // Abwesenheit zuerst: bleibt der alte Titel stehen, ist genau das der
     // Befund, den der Testlauf melden soll.
-    expect(screen.queryByText('Hotel de la Paix')).toBeNull()
+    await waitFor(() => expect(screen.queryByText('Hotel de la Paix')).toBeNull())
     expect(screen.getByText('Hotel Central')).toBeTruthy()
 
     const gespeichert = gespeicherteBuchungen()
     expect(gespeichert).toHaveLength(1)
-    expect(gespeichert[0].id).toBe(1)
+    expect(gespeichert[0].id).toBe('1')
     // Nicht angefasste Felder bleiben erhalten
     expect(gespeichert[0].checkOut).toBe('2026-08-18')
     expect(gespeichert[0].notiz).toBe('Fruehstueck inklusive')
@@ -170,11 +184,12 @@ describe('Buchungen bearbeiten', () => {
   })
 
   it('Nutzerpfad: Bearbeiten abbrechen laesst die Buchung unveraendert', async () => {
-    seedBuchungen([
-      { id: 1, titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
+    aufsetzen([
+      { id: '1', titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
     ])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Hotel Central')
 
     await user.click(screen.getByRole('button', { name: 'Bearbeiten' }))
     await user.clear(screen.getByLabelText('Titel'))
@@ -195,28 +210,30 @@ describe('Buchungen loeschen', () => {
     // window.confirm ist in jsdom nicht implementiert und wird ersetzt.
     // true = "der Nutzer klickt OK".
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
-    seedBuchungen([
-      { id: 1, titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
+    aufsetzen([
+      { id: '1', titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
     ])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Hotel Central')
 
     await user.click(screen.getByRole('button', { name: 'Löschen' }))
 
     expect(confirmSpy).toHaveBeenCalledTimes(1)
     expect(confirmSpy.mock.calls[0][0]).toContain('Hotel Central')
-    expect(screen.getByText('Noch keine Buchungen erfasst.')).toBeTruthy()
+    expect(await screen.findByText('Noch keine Buchungen erfasst.')).toBeTruthy()
     expect(gespeicherteBuchungen()).toEqual([])
   })
 
   it('Nutzerpfad: Loeschen -> Rueckfrage abbrechen -> Buchung bleibt', async () => {
     // false = "der Nutzer klickt Abbrechen".
     vi.spyOn(window, 'confirm').mockReturnValue(false)
-    seedBuchungen([
-      { id: 1, titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
+    aufsetzen([
+      { id: '1', titel: 'Hotel Central', typ: 'Unterkunft', checkIn: '', checkOut: '', datum: '', notiz: '', link: '', etappeId: '' },
     ])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Hotel Central')
 
     await user.click(screen.getByRole('button', { name: 'Löschen' }))
 
@@ -226,19 +243,44 @@ describe('Buchungen loeschen', () => {
 
   it('Nutzerpfad: von zwei Buchungen wird nur die gewaehlte geloescht', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
-    seedBuchungen([
-      { id: 1, titel: 'Lufthansa LH123', typ: 'Flug', datum: '2026-08-15', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' },
-      { id: 2, titel: 'Mietwagen Ulm', typ: 'Mietwagen', datum: '2026-08-20', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' },
+    aufsetzen([
+      { id: '1', titel: 'Lufthansa LH123', typ: 'Flug', datum: '2026-08-15', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' },
+      { id: '2', titel: 'Mietwagen Ulm', typ: 'Mietwagen', datum: '2026-08-20', checkIn: '', checkOut: '', notiz: '', link: '', etappeId: '' },
     ])
     const user = userEvent.setup()
     render(<Bookings />)
+    await screen.findByText('Lufthansa LH123')
 
     // Angezeigt wird chronologisch, der Flug (15.08.) steht also zuerst.
     const loeschKnoepfe = screen.getAllByRole('button', { name: 'Löschen' })
     await user.click(loeschKnoepfe[0])
 
-    expect(screen.queryByText('Lufthansa LH123')).toBeNull()
+    await waitFor(() => expect(screen.queryByText('Lufthansa LH123')).toBeNull())
     expect(screen.getByText('Mietwagen Ulm')).toBeTruthy()
     expect(gespeicherteBuchungen().map((b) => b.titel)).toEqual(['Mietwagen Ulm'])
+  })
+})
+
+describe('Buchungen ohne Schreibgeheimnis', () => {
+  it('Nutzerpfad: ohne Geheimnis speichern -> verstaendliche Meldung statt technischem Fehler', async () => {
+    db = dbAttrappeAufsetzen({ bookings: [], etappen: [] })
+    // Kein Geheimnis hinterlegt - genau der Zustand auf einem frischen Geraet.
+    const user = userEvent.setup()
+    render(<Bookings />)
+    await screen.findByText('Noch keine Buchungen erfasst.')
+
+    await user.type(screen.getByLabelText('Titel'), 'Lufthansa LH123')
+    await user.click(screen.getByRole('button', { name: 'Buchung hinzufügen' }))
+
+    const meldung = await screen.findByRole('alert')
+    // Klartext, kein HTTP-Status und kein Code der Datenbank.
+    expect(meldung.textContent).toContain('Schreibgeheimnis')
+    expect(meldung.textContent).toContain('Schreibzugang')
+    expect(meldung.textContent).not.toContain('401')
+    expect(meldung.textContent).not.toContain('42501')
+
+    // Und es wurde wirklich nichts angelegt.
+    expect(gespeicherteBuchungen()).toHaveLength(0)
+    expect(screen.getByText('Noch keine Buchungen erfasst.')).toBeTruthy()
   })
 })
