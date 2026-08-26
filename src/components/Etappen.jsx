@@ -10,6 +10,17 @@ import { useListe, useListen } from '../useListe'
 // zwischen zwei Darstellungen und der Ladeeffekt laeuft nicht endlos nach.
 const NEBENLISTEN = ['bookings', 'route', 'sightseeing', 'events', 'restaurants']
 
+// Der Nutzer kennt die Bereiche unter ihren deutschen Namen, nicht unter den
+// Tabellennamen der Datenbank. Fuer eine Fehlermeldung, die er verstehen soll,
+// wird uebersetzt.
+const BEREICHSNAMEN = {
+  bookings: 'Buchungen',
+  route: 'Fahrten',
+  sightseeing: 'Sehenswürdigkeiten',
+  events: 'Events',
+  restaurants: 'Restaurants',
+}
+
 function emptyForm() {
   return { name: '', vonDatum: '', bisDatum: '', notiz: '', link: '' }
 }
@@ -73,6 +84,8 @@ export default function Etappen() {
         ausKopie={liste.ausKopie || neben.ausKopie}
         stand={liste.stand || neben.stand}
         schreibFehler={liste.schreibFehler}
+        nichtGeladeneBereiche={neben.gescheitert.map((n) => BEREICHSNAMEN[n] || n)}
+        bereicheGesamt={NEBENLISTEN.length}
       />
 
       {liste.laden || liste.ladeFehler ? null : etappen.length === 0 ? (
