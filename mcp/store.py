@@ -1,10 +1,23 @@
-"""Reine Datenlogik fuer die Urlaub-App.
+"""Reine Datenlogik fuer die Urlaub-App - Datenquelle ist die Datenbank.
 
-Dieses Modul kapselt das Lesen, Schreiben und Manipulieren von
-``public/data.json``. Es importiert BEWUSST NICHT die MCP-SDK, damit
-die Unit-Tests (pytest) ohne installierte SDK laufen.
+Dieses Modul kapselt Lesen, Schreiben und Manipulieren der Reisedaten. Es
+importiert BEWUSST NICHT die MCP-SDK, damit die Unit-Tests (pytest) ohne
+installierte SDK laufen.
 
-Datenvertrag (public/data.json)::
+Umbau 2026-08-26: Bis dahin war ``public/data.json`` die Quelle. Seit dem
+Frontend-Umbau liest und schreibt die App ausschliesslich die Datenbank, und
+data.json wurde von der App nicht mehr gelesen - alles, was ueber den
+MCP-Weg eingetragen wurde, ging ins Leere. Seit diesem Umbau spricht auch
+dieses Modul die Datenbank an. Der Zugriffsweg (Adresse, Kopfzeilen,
+Feldfilter, Kennungsformat) ist bewusst wortgleich zu ``src/db.js`` gehalten,
+damit die beiden Schreibwege nicht auseinanderlaufen.
+
+``public/data.json`` bleibt bestehen, aber in umgekehrter Rolle: sie ist
+nicht mehr Quelle, sondern Sicherung. ``export_datei()`` schreibt den
+aktuellen Datenbankstand im alten Format hinein, damit die Datei nicht still
+auf einem alten Stand einfriert und weiterhin als Backup-Import taugt.
+
+Datenvertrag der Sicherungsdatei (public/data.json) - unveraendert::
 
     {
       "app": "urlaub-app",
@@ -16,17 +29,21 @@ Datenvertrag (public/data.json)::
       }
     }
 
-Die Feldnamen der Eintraege muessen exakt mit den React-Komponenten
-uebereinstimmen, sonst rendert die App die Werte nicht.
+Die Feldnamen der Eintraege muessen exakt mit den Spaltennamen der Datenbank
+und den React-Komponenten uebereinstimmen, sonst rendert die App die Werte
+nicht.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import secrets
 import tempfile
 import time
-import uuid
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
@@ -36,7 +53,7 @@ APP_VERSION = 1
 # Reihenfolge = Render-Reihenfolge in der App; Keys muessen exakt stimmen.
 CATEGORIES = ("etappen", "bookings", "route", "sightseeing", "events", "restaurants")
 
-# Feld-Templates je Kategorie. "id" wird separat vergeben (uuid4-hex).
+# Feld-Templates je Kategorie. "id" wird separat vergeben (siehe neue_kennung).
 # Fehlende optionale Felder werden mit "" gefuellt, NIE weggelassen.
 CATEGORY_TEMPLATES: dict[str, dict[str, str]] = {
     "etappen": {
@@ -103,6 +120,182 @@ ENUMS: dict[tuple[str, str], tuple[str, ...]] = {
     ("events", "status"): ("geplant", "gebucht"),
 }
 
+# Die Spalten, die je Liste angefordert und geschrieben werden. Wortgleich zu
+# FELDER in src/db.js und zugleich Filter in BEIDE Richtungen:
+#   Lesen:     nur diese Spalten kommen mit. Die Verwaltungsspalten
+#              id_numerisch und aktualisiert_am bleiben aussen vor, die
+#              Sicherungsdatei bekommt also exakt die alte Objektform.
+#   Schreiben: nur diese Felder werden gesendet, damit ein gelesener Eintrag
+#              gefahrlos zurueckgeschickt werden kann.
+FELDER: dict[str, tuple[str, ...]] = {
+    cat: ("id", *CATEGORY_TEMPLATES[cat].keys()) for cat in CATEGORIES
+}
+
+
+# ---------------------------------------------------------------------------
+# Datenbank-Zugang
+# ---------------------------------------------------------------------------
+
+DB_URL = "https://yrsdfiskfpefzqgoscze.supabase.co"
+
+# Oeffentlicher Lese-Schluessel. Er darf im Quelltext stehen: er erlaubt nur,
+# was die Zeilenschutz-Regeln der Datenbank ohnehin jedem erlauben - lesen.
+# Jeder Schreibvorgang verlangt zusaetzlich das Schreibgeheimnis, und das
+# steht NICHT hier, sondern kommt aus der Umgebung.
+DB_KEY = "sb_publishable_ZDpxCF_YHauqkktcx-z0_Q_paZnPWfi"
+
+GEHEIMNIS_ENV = "URLAUB_SCHREIBGEHEIMNIS"
+GEHEIMNIS_KOPFZEILE = "x-urlaub-schreibgeheimnis"
+
+ZEITGRENZE_S = 20
+
+MELDUNG_GEHEIMNIS_FEHLT = (
+    f"Das Schreibgeheimnis fehlt: die Umgebungsvariable {GEHEIMNIS_ENV} ist "
+    f"nicht gesetzt oder leer. Lesen funktioniert weiterhin, Schreiben nicht. "
+    f"Variable setzen und den MCP-Server neu starten."
+)
+
+MELDUNG_GEHEIMNIS_ABGELEHNT = (
+    f"Die Datenbank lehnt das Schreibgeheimnis ab. Der Wert in "
+    f"{GEHEIMNIS_ENV} passt nicht zur Datenbank. Es wurde nichts gespeichert."
+)
+
+
+class StoreError(Exception):
+    """Fachlicher Fehler in der Datenlogik (unbekannte Kategorie, ungueltiger
+
+    Enum-Wert, fehlende id, abgewiesene Datenbank-Anfrage usw.). Wird von
+    server.py in Klartext an den Aufrufer zurueckgegeben.
+    """
+
+
+def hat_geheimnis() -> bool:
+    """Sagt, ob ein Schreibgeheimnis in der Umgebung steht - ohne es zu zeigen."""
+    return bool(os.environ.get(GEHEIMNIS_ENV, "").strip())
+
+
+def _geheimnis() -> str:
+    """Liest das Schreibgeheimnis aus der Umgebung.
+
+    Der Wert wird NIE geloggt, nie in eine Fehlermeldung geschrieben und nie
+    in eine Datei ausgegeben. Fehlt er, gibt es sofort Klartext statt spaeter
+    einen HTTP-403 aus der Datenbank.
+    """
+    wert = os.environ.get(GEHEIMNIS_ENV, "").strip()
+    if not wert:
+        raise StoreError(MELDUNG_GEHEIMNIS_FEHLT)
+    return wert
+
+
+def _kopfzeilen(mit_geheimnis: bool) -> dict[str, str]:
+    kopf = {
+        "apikey": DB_KEY,
+        "Authorization": f"Bearer {DB_KEY}",
+        "Content-Type": "application/json",
+    }
+    if mit_geheimnis:
+        kopf[GEHEIMNIS_KOPFZEILE] = _geheimnis()
+    return kopf
+
+
+def _anfrage(
+    pfad: str,
+    methode: str = "GET",
+    rumpf: Any = None,
+    mit_geheimnis: bool = False,
+    extra_kopf: dict[str, str] | None = None,
+) -> Any:
+    """Eine Anfrage an die Datenbank. Gibt die geparste Antwort oder None.
+
+    Bewusst mit der Standardbibliothek (urllib) statt httpx: der Server laeuft
+    synchron ueber stdio, braucht also keinen async-Client, und so kommt keine
+    zusaetzliche Abhaengigkeit dazu.
+
+    Fehler werden in StoreError mit Klartext uebersetzt. In keiner dieser
+    Meldungen taucht das Schreibgeheimnis auf.
+    """
+    kopf = _kopfzeilen(mit_geheimnis)
+    if extra_kopf:
+        kopf.update(extra_kopf)
+
+    daten = None
+    if rumpf is not None:
+        daten = json.dumps(rumpf, ensure_ascii=False).encode("utf-8")
+
+    anfrage = urllib.request.Request(
+        f"{DB_URL}/rest/v1/{pfad}", data=daten, headers=kopf, method=methode
+    )
+
+    try:
+        with urllib.request.urlopen(anfrage, timeout=ZEITGRENZE_S) as antwort:
+            roh = antwort.read().decode("utf-8")
+    except urllib.error.HTTPError as fehler:
+        if mit_geheimnis and fehler.code in (401, 403):
+            raise StoreError(MELDUNG_GEHEIMNIS_ABGELEHNT) from None
+        # Antworttext gekuerzt mitgeben: er hilft bei der Diagnose und kann
+        # das Geheimnis nicht enthalten (es wird nur als Kopfzeile gesendet,
+        # nie im Rumpf, und die Datenbank spiegelt keine Kopfzeilen).
+        text = ""
+        try:
+            text = fehler.read().decode("utf-8", "replace")[:300].strip()
+        except Exception:
+            pass
+        raise StoreError(
+            f"Die Datenbank hat die Anfrage abgelehnt (HTTP {fehler.code}). "
+            f"Es wurde nichts gespeichert. {text}".strip()
+        ) from None
+    except Exception:
+        # Kein HTTP-Status: Netz weg oder Zeitgrenze gerissen. Die urspruengliche
+        # Ausnahme wird bewusst nicht durchgereicht, damit keine Kopfzeilen aus
+        # einem Traceback nach aussen gelangen koennen.
+        raise StoreError(
+            "Keine Verbindung zur Datenbank. Es wurde nichts gespeichert. "
+            "Bitte spaeter erneut versuchen."
+        ) from None
+
+    if not roh:
+        return None
+    try:
+        return json.loads(roh)
+    except json.JSONDecodeError:
+        raise StoreError(
+            "Die Datenbank hat eine unlesbare Antwort geschickt."
+        ) from None
+
+
+# ---------------------------------------------------------------------------
+# Kennungen
+# ---------------------------------------------------------------------------
+
+# Alphabet von JavaScripts Number.prototype.toString(36).
+_KENNUNG_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
+_KENNUNG_ZUFALL_LAENGE = 6
+
+
+def neue_kennung() -> str:
+    """Erzeugt eine Kennung im selben Format wie ``neueKennung`` in src/db.js.
+
+    Aufbau: Zeitstempel in Millisekunden, Bindestrich, sechs Zufallszeichen
+    aus [0-9a-z].
+
+    Der Zeitstempel steht vorn, damit neue Eintraege in der nach "id"
+    sortierten Abfrage chronologisch einsortiert werden. Der Zufallsanteil
+    verhindert, dass zwei Schreibwege in derselben Millisekunde dieselbe
+    Kennung erzeugen.
+
+    Bewusster Unterschied zum Frontend: dort liefert Math.random den Zufall,
+    hier secrets. Format, Alphabet und Laenge sind identisch - nur die Quelle
+    der Zufallszahl ist die bessere.
+    """
+    zufall = "".join(
+        secrets.choice(_KENNUNG_ALPHABET) for _ in range(_KENNUNG_ZUFALL_LAENGE)
+    )
+    return f"{int(time.time() * 1000)}-{zufall}"
+
+
+# ---------------------------------------------------------------------------
+# Sicherungsdatei (public/data.json)
+# ---------------------------------------------------------------------------
 
 # Retry fuer den atomaren Rename in save_data(). Auf P: (pCloud) sperrt der
 # Sync-Client die Zieldatei kurzzeitig, os.replace scheitert dann mit
@@ -127,13 +320,6 @@ def _replace_with_retry(tmp_path: str, path: str) -> None:
             time.sleep(REPLACE_RETRY_DELAY_S)
 
 
-class StoreError(Exception):
-    """Fachlicher Fehler in der Datenlogik (unbekannte Kategorie, ungueltiger
-
-    Enum-Wert, fehlende id usw.). Wird von server.py in Klartext uebersetzt.
-    """
-
-
 def _now_iso() -> str:
     """Aktueller Zeitstempel als ISO-8601 in UTC (mit 'Z')."""
     return (
@@ -155,10 +341,10 @@ def empty_data() -> dict[str, Any]:
 
 
 def _ensure_shape(data: Any) -> dict[str, Any]:
-    """Sorgt dafuer, dass ein geladenes dict die vollstaendige Struktur hat.
+    """Sorgt dafuer, dass ein dict die vollstaendige Struktur hat.
 
-    Fehlende Top-Level- oder Kategorie-Keys werden ergaenzt, ohne
-    vorhandene Eintraege zu verlieren.
+    Fehlende Top-Level- oder Kategorie-Keys werden ergaenzt, ohne vorhandene
+    Eintraege zu verlieren.
     """
     if not isinstance(data, dict):
         return empty_data()
@@ -175,24 +361,12 @@ def _ensure_shape(data: Any) -> dict[str, Any]:
     return result
 
 
-def load_data(path: str) -> dict[str, Any]:
-    """Laedt data.json. Fehlt die Datei oder ist sie kaputt, wird ein
-
-    frisches leeres Geruest zurueckgegeben (nie eine Exception).
-    """
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            raw = json.load(fh)
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
-        return empty_data()
-    return _ensure_shape(raw)
-
-
 def save_data(path: str, data: dict[str, Any]) -> dict[str, Any]:
-    """Speichert data.json atomar (temp-Datei + os.replace, mit Retry).
+    """Speichert die Sicherungsdatei atomar (temp-Datei + os.replace, mit Retry).
 
     - setzt ``updatedAt`` auf aktuellen ISO-UTC-Zeitstempel
-    - schreibt huebsch eingerueckt, ``ensure_ascii=False``
+    - schreibt huebsch eingerueckt, ``ensure_ascii=False`` (Umlaute bleiben
+      als Umlaute in der Datei stehen)
     - gibt das gespeicherte dict zurueck
     """
     data = _ensure_shape(data)
@@ -217,6 +391,51 @@ def save_data(path: str, data: dict[str, Any]) -> dict[str, Any]:
             pass
         raise
     return data
+
+
+def export_datei(path: str) -> dict[str, Any]:
+    """Schreibt den aktuellen Datenbankstand in die Sicherungsdatei.
+
+    Liest alle sechs Listen aus der Datenbank und legt sie im alten
+    data.json-Format ab, damit die Datei weiterhin als Backup-Import taugt.
+    """
+    return save_data(path, load_data())
+
+
+# ---------------------------------------------------------------------------
+# Lesen
+# ---------------------------------------------------------------------------
+
+
+def liste_lesen(kategorie: str) -> list[dict[str, Any]]:
+    """Liest eine Kategorie aus der Datenbank, nach id aufsteigend sortiert.
+
+    Es kommen genau die Felder aus ``FELDER`` zurueck - die Verwaltungsspalten
+    der Datenbank bleiben aussen vor.
+    """
+    _check_category(kategorie)
+    spalten = ",".join(FELDER[kategorie])
+    zeilen = _anfrage(f"{kategorie}?select={spalten}&order=id.asc")
+    return zeilen if isinstance(zeilen, list) else []
+
+
+def load_data() -> dict[str, Any]:
+    """Laedt alle sechs Listen aus der Datenbank in das bekannte Geruest.
+
+    ``updatedAt`` ist der Zeitpunkt dieses Abrufs, nicht der Zeitpunkt der
+    letzten Aenderung - die Datenbank fuehrt Aenderungszeiten je Zeile in
+    ``aktualisiert_am``, und diese Spalte wird bewusst nicht mitgelesen.
+    """
+    data = empty_data()
+    for cat in CATEGORIES:
+        data["data"][cat] = liste_lesen(cat)
+    data["updatedAt"] = _now_iso()
+    return data
+
+
+# ---------------------------------------------------------------------------
+# Pruefungen und Eintrags-Aufbau
+# ---------------------------------------------------------------------------
 
 
 def _check_category(kategorie: str) -> None:
@@ -245,7 +464,7 @@ def _build_entry(
     """Baut einen vollstaendigen Eintrag aus Template + gelieferten Feldern.
 
     Unbekannte Feldnamen werden ignoriert (nur Template-Felder + id).
-    Fehlende Felder werden mit "" (aus Template) gefuellt.
+    Fehlende Felder werden mit "" (aus Template) gefuellt, nie weggelassen.
     """
     template = CATEGORY_TEMPLATES[kategorie]
     entry: dict[str, Any] = {"id": entry_id}
@@ -255,76 +474,115 @@ def _build_entry(
     return entry
 
 
+# ---------------------------------------------------------------------------
+# Schreiben
+# ---------------------------------------------------------------------------
+
+
 def add_entry(
-    data: dict[str, Any],
     kategorie: str,
     felder: dict[str, Any],
     id: str | None = None,
 ) -> dict[str, Any]:
-    """Fuegt einen neuen Eintrag hinzu und gibt ihn zurueck.
+    """Legt einen neuen Eintrag in der Datenbank an und gibt ihn zurueck.
 
-    - vergibt uuid4-hex-id, falls ``id`` None ist
+    - vergibt eine Kennung im Frontend-Format, falls ``id`` None ist
     - fuellt fehlende Felder aus dem Template mit ""
-    - validiert Kategorie und erlaubte Enum-Werte
+    - validiert Kategorie und erlaubte Enum-Werte, bevor etwas gesendet wird
     """
     _check_category(kategorie)
     _validate_enums(kategorie, felder)
-    entry_id = id if id is not None else uuid.uuid4().hex
+    entry_id = id if id is not None else neue_kennung()
     entry = _build_entry(kategorie, felder, entry_id)
-    data = _ensure_shape(data)
-    data["data"][kategorie].append(entry)
+    spalten = ",".join(FELDER[kategorie])
+    zeilen = _anfrage(
+        f"{kategorie}?select={spalten}",
+        methode="POST",
+        rumpf=entry,
+        mit_geheimnis=True,
+        # Ohne diese Kopfzeile liefert die Datenbank einen leeren Rumpf zurueck.
+        extra_kopf={"Prefer": "return=representation"},
+    )
+    if isinstance(zeilen, list) and zeilen:
+        return zeilen[0]
     return entry
 
 
-def find_entry(
-    data: dict[str, Any], kategorie: str, id: str
-) -> dict[str, Any] | None:
-    """Findet einen Eintrag per String-id, oder None."""
+def find_entry(kategorie: str, id: str) -> dict[str, Any] | None:
+    """Holt einen Eintrag per Kennung aus der Datenbank, oder None."""
     _check_category(kategorie)
-    for entry in _ensure_shape(data)["data"][kategorie]:
-        if str(entry.get("id")) == str(id):
-            return entry
+    spalten = ",".join(FELDER[kategorie])
+    zeilen = _anfrage(
+        f"{kategorie}?id=eq.{urllib.parse.quote(str(id), safe='')}"
+        f"&select={spalten}&limit=1"
+    )
+    if isinstance(zeilen, list) and zeilen:
+        return zeilen[0]
     return None
 
 
 def update_entry(
-    data: dict[str, Any],
     kategorie: str,
     id: str,
     felder: dict[str, Any],
 ) -> dict[str, Any]:
-    """Merged ``felder`` in einen bestehenden Eintrag.
+    """Merged ``felder`` in einen bestehenden Eintrag der Datenbank.
 
-    Nur Template-Felder werden uebernommen; die id bleibt unveraendert.
-    Wirft StoreError, wenn die id nicht existiert.
+    Nur Template-Felder werden uebernommen; die Kennung bleibt unveraendert.
+    Wirft StoreError, wenn die Kennung nicht existiert.
     """
     _check_category(kategorie)
     _validate_enums(kategorie, felder)
-    entry = find_entry(data, kategorie, id)
-    if entry is None:
-        raise StoreError(
-            f"Kein Eintrag in '{kategorie}' mit id '{id}' gefunden."
-        )
     template = CATEGORY_TEMPLATES[kategorie]
+    aenderung: dict[str, Any] = {}
     for field in template:
         if field in felder:
             value = felder[field]
-            entry[field] = "" if value is None else value
-    return entry
+            aenderung[field] = "" if value is None else value
+    if not aenderung:
+        entry = find_entry(kategorie, id)
+        if entry is None:
+            raise StoreError(
+                f"Kein Eintrag in '{kategorie}' mit id '{id}' gefunden."
+            )
+        return entry
+
+    spalten = ",".join(FELDER[kategorie])
+    zeilen = _anfrage(
+        f"{kategorie}?id=eq.{urllib.parse.quote(str(id), safe='')}"
+        f"&select={spalten}",
+        methode="PATCH",
+        rumpf=aenderung,
+        mit_geheimnis=True,
+        extra_kopf={"Prefer": "return=representation"},
+    )
+    if isinstance(zeilen, list) and zeilen:
+        return zeilen[0]
+    raise StoreError(f"Kein Eintrag in '{kategorie}' mit id '{id}' gefunden.")
 
 
-def delete_entry(data: dict[str, Any], kategorie: str, id: str) -> dict[str, Any]:
-    """Loescht einen Eintrag per id und gibt ihn zurueck.
+def delete_entry(kategorie: str, id: str) -> dict[str, Any]:
+    """Loescht einen Eintrag per Kennung und gibt den geloeschten Eintrag zurueck.
 
-    Wirft StoreError, wenn die id nicht existiert.
+    Wirft StoreError, wenn die Kennung nicht existiert.
     """
     _check_category(kategorie)
-    data = _ensure_shape(data)
-    lst = data["data"][kategorie]
-    for i, entry in enumerate(lst):
-        if str(entry.get("id")) == str(id):
-            return lst.pop(i)
+    spalten = ",".join(FELDER[kategorie])
+    zeilen = _anfrage(
+        f"{kategorie}?id=eq.{urllib.parse.quote(str(id), safe='')}"
+        f"&select={spalten}",
+        methode="DELETE",
+        mit_geheimnis=True,
+        extra_kopf={"Prefer": "return=representation"},
+    )
+    if isinstance(zeilen, list) and zeilen:
+        return zeilen[0]
     raise StoreError(f"Kein Eintrag in '{kategorie}' mit id '{id}' gefunden.")
+
+
+# ---------------------------------------------------------------------------
+# Etappen-Aufloesung (arbeitet auf einem bereits geladenen Geruest)
+# ---------------------------------------------------------------------------
 
 
 def find_etappe(

@@ -1,57 +1,9 @@
 {
   "app": "urlaub-app",
   "version": 1,
-  "updatedAt": "2026-08-25T21:46:18Z",
+  "updatedAt": "2026-08-26T18:31:23Z",
   "data": {
     "etappen": [
-      {
-        "id": "34a06534bd5f4efd8c4be05b084c0052",
-        "name": "Reims",
-        "vonDatum": "2026-08-29",
-        "bisDatum": "2026-08-30",
-        "notiz": "",
-        "link": "https://de.wikipedia.org/wiki/Reims"
-      },
-      {
-        "id": "b77d2bb2c2b0453ab22612c7b3b7c538",
-        "name": "Rouen",
-        "vonDatum": "2026-08-30",
-        "bisDatum": "2026-08-31",
-        "notiz": "",
-        "link": "https://de.wikipedia.org/wiki/Rouen"
-      },
-      {
-        "id": "cb870eafd75248fb82a6c301cc34e94a",
-        "name": "Honfleur",
-        "vonDatum": "2026-08-31",
-        "bisDatum": "2026-09-01",
-        "notiz": "",
-        "link": "https://de.wikipedia.org/wiki/Honfleur"
-      },
-      {
-        "id": "eef5e8b89ee34310a1e5475d89ac4fc3",
-        "name": "Ploubazlanec (Bretagne)",
-        "vonDatum": "2026-09-05",
-        "bisDatum": "2026-09-12",
-        "notiz": "Hauptetappe: 7 Nächte Ferienhaus am kleinen Hafen, nahe Paimpol.",
-        "link": "https://de.wikipedia.org/wiki/Ploubazlanec"
-      },
-      {
-        "id": "f1ef22ee4b44421593fb7480de1262af",
-        "name": "Rennes",
-        "vonDatum": "2026-09-01",
-        "bisDatum": "2026-09-03",
-        "notiz": "",
-        "link": "https://de.wikipedia.org/wiki/Rennes"
-      },
-      {
-        "id": "69e7bdd9f9954040a1cf3a271a68cd3e",
-        "name": "Saint-Malo",
-        "vonDatum": "2026-09-03",
-        "bisDatum": "2026-09-05",
-        "notiz": "",
-        "link": "https://de.wikipedia.org/wiki/Saint-Malo"
-      },
       {
         "id": "2dc059fcc59d426da898a8064a51e87a",
         "name": "Troyes",
@@ -59,19 +11,67 @@
         "bisDatum": "2026-09-13",
         "notiz": "Rückreise-Zwischenstopp Ploubazlanec → Ulm. Fachwerk-Altstadt, Kathedrale, Champagne-Küche.",
         "link": "https://de.wikipedia.org/wiki/Troyes"
+      },
+      {
+        "id": "34a06534bd5f4efd8c4be05b084c0052",
+        "name": "Reims",
+        "vonDatum": "2026-08-29",
+        "bisDatum": "2026-08-30",
+        "notiz": "https://reisehappen.de/reims-sehenswuerdigkeiten-tipps/",
+        "link": "https://de.wikipedia.org/wiki/Reims"
+      },
+      {
+        "id": "69e7bdd9f9954040a1cf3a271a68cd3e",
+        "name": "Saint-Malo",
+        "vonDatum": "2026-09-03",
+        "bisDatum": "2026-09-05",
+        "notiz": "https://blackdotswhitespots.com/bretagne-reisebericht/",
+        "link": "https://de.wikipedia.org/wiki/Saint-Malo"
+      },
+      {
+        "id": "b77d2bb2c2b0453ab22612c7b3b7c538",
+        "name": "Rouen",
+        "vonDatum": "2026-08-30",
+        "bisDatum": "2026-08-31",
+        "notiz": "https://viel-unterwegs.de/rouen-sehenswuerdigkeiten/",
+        "link": "https://de.wikipedia.org/wiki/Rouen"
+      },
+      {
+        "id": "cb870eafd75248fb82a6c301cc34e94a",
+        "name": "Honfleur",
+        "vonDatum": "2026-08-31",
+        "bisDatum": "2026-09-01",
+        "notiz": "https://globusliebe.com/rennes-frankreich-sehenswuerdigkeiten/https://salutbonn.de/oh-du-hinreissendes-honfleur-verliebt-in-ein-altes-hafenbecken/",
+        "link": "https://de.wikipedia.org/wiki/Honfleur"
+      },
+      {
+        "id": "eef5e8b89ee34310a1e5475d89ac4fc3",
+        "name": "Ploubazlanec (Bretagne)",
+        "vonDatum": "2026-09-05",
+        "bisDatum": "2026-09-12",
+        "notiz": "Hauptetappe: 7 Nächte Ferienhaus am kleinen Hafen, nahe Paimpol.\n- https://www.guingamp-paimpol.com/de\n- https://www.bretagne-reisen.de/urlaubsvorbereitung/aktives-und-besichtigungen/alle-aktivitaeten/?autoselect_id=1153",
+        "link": "https://de.wikipedia.org/wiki/Ploubazlanec"
+      },
+      {
+        "id": "f1ef22ee4b44421593fb7480de1262af",
+        "name": "Rennes",
+        "vonDatum": "2026-09-01",
+        "bisDatum": "2026-09-03",
+        "notiz": "https://meinfrankreich.com/die-bretonische-hauptstadt-rennes-roazhon/",
+        "link": "https://de.wikipedia.org/wiki/Rennes"
       }
     ],
     "bookings": [
       {
-        "id": "f7d89873e83b4338a74254418b31df63",
-        "titel": "Quality Aparthotel Reims - Les Capucins",
+        "id": "0311f4d9c68944788fda54a82ef24fd8",
+        "titel": "Ferienhaus „Charming house with sea view\" Ploubazlanec",
         "typ": "Unterkunft",
         "datum": "",
-        "checkIn": "2026-08-29",
-        "checkOut": "2026-08-30",
-        "notiz": "Booking.com Bestätigungsnr. 5240716282. 1 Nacht, Studio, 2 Erwachsene. Gesamtpreis 66,34 € (keine Vorauszahlung). Kostenlos stornierbar bis 29.08.2026 16:00. Check-in ab 15:00, Check-out bis 11:00. Adresse: 140 rue des Capucins, 51100 Reims. Tel. +33 3 26 49 30 00. Frühstück optional 12,90 €/Person/Nacht.",
-        "etappeId": "34a06534bd5f4efd8c4be05b084c0052",
-        "link": "https://www.zenitude-hotel-residences.com/en/residences/reims-les-capucins/"
+        "checkIn": "2026-09-05",
+        "checkOut": "2026-09-12",
+        "notiz": "FeWo-direkt, Reservierungsnr. HA-7GNZ7H. 7 Nächte, 2 Erwachsene, Haus mit Meerblick am kleinen Hafen. Gesamtpreis 732,57 € — bereits vollständig bezahlt. Check-in 05.09. ab 14:00, Check-out 12.09. bis 10:00. Adresse: 8 Rue de la Jetée, 22620 Ploubazlanec.",
+        "link": "",
+        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
       },
       {
         "id": "0c742c7e887c49a2a72b0bf728432f8e",
@@ -81,40 +81,8 @@
         "checkIn": "2026-08-30",
         "checkOut": "2026-08-31",
         "notiz": "Booking.com. 1 Nacht, Standard Doppelzimmer, 2 Erwachsene. Gesamtpreis 82,30 € (davon Übernachtungssteuer 3,30 € direkt vor Ort). Keine Vorauszahlung, per Kreditkarte garantiert. Kostenlos stornierbar bis 29.08.2026 23:59. Check-in 15:00–23:30, Check-out bis 11:30. Adresse: 12 Avenue Aristide Briand, 76000 Rouen. Tel. +33 2 35 08 12 11. Frühstück optional 17,90 €/Person.",
-        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538",
-        "link": "https://all.accor.com/hotel/5690/index.en.shtml"
-      },
-      {
-        "id": "e7ca9b8f45c14500a151a817faa0f94b",
-        "titel": "Les Cascades - Hôtel de Charme",
-        "typ": "Unterkunft",
-        "datum": "",
-        "checkIn": "2026-08-31",
-        "checkOut": "2026-09-01",
-        "notiz": "Booking.com Buchungsnr. 5433365041. UMGEBUCHT am 02.08.2026 (vorher 01.–02.09.). 1 Nacht, Doppelzimmer, 2 Erwachsene. Gesamtpreis 117,72 €. Check-in 31.08. 16:00–21:00, Check-out bis 11:00. Adresse: 19 cours des fosses, 14600 Honfleur. Tel. +33 2 31 89 05 83. Frühstück optional 11,50 €/Person.",
-        "etappeId": "cb870eafd75248fb82a6c301cc34e94a",
-        "link": "https://www.lescascades.com/"
-      },
-      {
-        "id": "0311f4d9c68944788fda54a82ef24fd8",
-        "titel": "Ferienhaus „Charming house with sea view\" Ploubazlanec",
-        "typ": "Unterkunft",
-        "datum": "",
-        "checkIn": "2026-09-05",
-        "checkOut": "2026-09-12",
-        "notiz": "FeWo-direkt, Reservierungsnr. HA-7GNZ7H. 7 Nächte, 2 Erwachsene, Haus mit Meerblick am kleinen Hafen. Gesamtpreis 732,57 € — bereits vollständig bezahlt. Check-in 05.09. ab 14:00, Check-out 12.09. bis 10:00. Adresse: 8 Rue de la Jetée, 22620 Ploubazlanec.",
-        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
-      },
-      {
-        "id": "fb0a7f2407d043ae80af5d7fc8003493",
-        "titel": "KastellRen - Rennes - Grand parking privé",
-        "typ": "Unterkunft",
-        "datum": "",
-        "checkIn": "2026-09-01",
-        "checkOut": "2026-09-03",
-        "notiz": "Booking.com. 2 Nächte, Superior Doppelzimmer, 2 Erwachsene. Gesamtpreis 213,97 €, Frühstück inbegriffen. Kostenlos stornierbar bis 30.08.2026 23:59. Check-in 01.09. 17:00–22:30, Check-out 03.09. 06:00–10:00. Großer Privatparkplatz. Adresse: 4 Chemin du Bois Harel, 35200 Rennes. Tel. +33 7 49 46 05 71.",
-        "etappeId": "f1ef22ee4b44421593fb7480de1262af",
-        "link": "https://www.kastellren.com/"
+        "link": "https://all.accor.com/hotel/5690/index.en.shtml",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
         "id": "b87074be8dc84aea982184ef81061cb5",
@@ -124,8 +92,8 @@
         "checkIn": "2026-09-03",
         "checkOut": "2026-09-05",
         "notiz": "Booking.com Buchungsnr. 5827.522.653. 2 Nächte, Apartment mit 1 Schlafzimmer, 2 Erwachsene. Gesamtpreis 248,09 € (inkl. 39 € Reinigung). Kostenlos stornierbar bis 28.08.2026 23:59. Check-in 03.09. ab 16:00, Check-out 05.09. bis 11:00. Adresse: 14 Rue de la Cité, Saint-Servan, 35400 Saint-Malo (GPS N 048° 38.145, W 02° 1.539). Tel. +33 7 85 58 20 75. Küche vorhanden, keine Mahlzeiten inbegriffen. Kostenlose öffentliche Parkplätze in der Nähe, WLAN gratis. Strand 50 m.",
-        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e",
-        "link": "https://www.booking.com/hotel/fr/cite-solidor-appartement-frida-plage-50m-rue-gratuite.html"
+        "link": "https://www.booking.com/hotel/fr/cite-solidor-appartement-frida-plage-50m-rue-gratuite.html",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
       },
       {
         "id": "daa3e9e507f844978bbcacf8107e3801",
@@ -135,11 +103,74 @@
         "checkIn": "2026-09-12",
         "checkOut": "2026-09-13",
         "notiz": "Booking.com Buchungsnr. 6578.589.291. 1 Nacht, Comfort Doppel-/Zweibettzimmer, 2 Erwachsene. Preis 85,80 € + Übernachtungssteuer 2,64 € = Endpreis 88,44 €, zahlbar an die Unterkunft (Anzahlung wird 24 Std. vor Anreise abgebucht). Kostenlos stornierbar bis 10.09.2026 23:59. Check-in 12.09. 16:00–20:00, Check-out 13.09. 07:00–11:00. Adresse: 22 boulevard Carnot, 10000 Troyes (GPS N 048° 17.750, E 04° 4.013). Tel. +33 3 25 73 19 99. Private Parkplätze in der Nähe: 8,50 €/Tag, Reservierung erforderlich. WLAN gratis. Keine Mahlzeiten inbegriffen.",
-        "etappeId": "2dc059fcc59d426da898a8064a51e87a",
-        "link": "https://troyes-royal.brithotel.com/"
+        "link": "https://troyes-royal.brithotel.com/",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      },
+      {
+        "id": "e7ca9b8f45c14500a151a817faa0f94b",
+        "titel": "Les Cascades - Hôtel de Charme",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-08-31",
+        "checkOut": "2026-09-01",
+        "notiz": "Booking.com Buchungsnr. 5433365041. UMGEBUCHT am 02.08.2026 (vorher 01.–02.09.). 1 Nacht, Doppelzimmer, 2 Erwachsene. Gesamtpreis 117,72 €. Check-in 31.08. 16:00–21:00, Check-out bis 11:00. Adresse: 19 cours des fosses, 14600 Honfleur. Tel. +33 2 31 89 05 83. Frühstück optional 11,50 €/Person.",
+        "link": "https://www.lescascades.com/",
+        "etappeId": "cb870eafd75248fb82a6c301cc34e94a"
+      },
+      {
+        "id": "f7d89873e83b4338a74254418b31df63",
+        "titel": "Quality Aparthotel Reims - Les Capucins",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-08-29",
+        "checkOut": "2026-08-30",
+        "notiz": "Booking.com Bestätigungsnr. 5240716282. 1 Nacht, Studio, 2 Erwachsene. Gesamtpreis 66,34 € (keine Vorauszahlung). Kostenlos stornierbar bis 29.08.2026 16:00. Check-in ab 15:00, Check-out bis 11:00. Adresse: 140 rue des Capucins, 51100 Reims. Tel. +33 3 26 49 30 00. Frühstück optional 12,90 €/Person/Nacht.",
+        "link": "https://www.zenitude-hotel-residences.com/en/residences/reims-les-capucins/",
+        "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
+      },
+      {
+        "id": "fb0a7f2407d043ae80af5d7fc8003493",
+        "titel": "KastellRen - Rennes - Grand parking privé",
+        "typ": "Unterkunft",
+        "datum": "",
+        "checkIn": "2026-09-01",
+        "checkOut": "2026-09-03",
+        "notiz": "Booking.com. 2 Nächte, Superior Doppelzimmer, 2 Erwachsene. Gesamtpreis 213,97 €, Frühstück inbegriffen. Kostenlos stornierbar bis 30.08.2026 23:59. Check-in 01.09. 17:00–22:30, Check-out 03.09. 06:00–10:00. Großer Privatparkplatz. Adresse: 4 Chemin du Bois Harel, 35200 Rennes. Tel. +33 7 49 46 05 71.",
+        "link": "https://www.kastellren.com/",
+        "etappeId": "f1ef22ee4b44421593fb7480de1262af"
       }
     ],
     "route": [
+      {
+        "id": "1e6e0630b0d948dfb437f8cbf5ae22f1",
+        "von": "Rennes",
+        "nach": "Saint-Malo",
+        "datum": "2026-09-03",
+        "distanz": "ca. 70 km",
+        "notiz": "",
+        "link": "",
+        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
+      },
+      {
+        "id": "27e66aee03154fd28358977577c18413",
+        "von": "Troyes",
+        "nach": "Ulm",
+        "datum": "2026-09-13",
+        "distanz": "ca. 545 km",
+        "notiz": "Rückreise-Tag 2, Heimfahrt",
+        "link": "",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      },
+      {
+        "id": "371dcf599684419980c609d7c6f48568",
+        "von": "Ploubazlanec",
+        "nach": "Troyes",
+        "datum": "2026-09-12",
+        "distanz": "ca. 620 km",
+        "notiz": "Rückreise-Tag 1, Check-out bis 10:00",
+        "link": "",
+        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+      },
       {
         "id": "398335541fd64351bed03aaabe6eebdf",
         "von": "Ulm",
@@ -147,16 +178,18 @@
         "datum": "2026-08-29",
         "distanz": "ca. 590 km",
         "notiz": "Anreise-Tag 1",
+        "link": "",
         "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
       },
       {
-        "id": "d90379e366ce49b0aca3ae64dd044e62",
-        "von": "Reims",
-        "nach": "Rouen",
-        "datum": "2026-08-30",
-        "distanz": "ca. 280 km",
-        "notiz": "",
-        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
+        "id": "6e86df6eac394bb6bb524e3f58cf6416",
+        "von": "Saint-Malo",
+        "nach": "Ploubazlanec",
+        "datum": "2026-09-05",
+        "distanz": "ca. 115 km",
+        "notiz": "Check-in Ferienhaus ab 14:00",
+        "link": "",
+        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
       },
       {
         "id": "83bddd27e68e4e6b8a99ccd2cdcb269b",
@@ -165,6 +198,7 @@
         "datum": "2026-08-31",
         "distanz": "ca. 90 km",
         "notiz": "",
+        "link": "",
         "etappeId": "cb870eafd75248fb82a6c301cc34e94a"
       },
       {
@@ -174,48 +208,23 @@
         "datum": "2026-09-01",
         "distanz": "ca. 230 km",
         "notiz": "",
+        "link": "",
         "etappeId": "f1ef22ee4b44421593fb7480de1262af"
       },
       {
-        "id": "1e6e0630b0d948dfb437f8cbf5ae22f1",
-        "von": "Rennes",
-        "nach": "Saint-Malo",
-        "datum": "2026-09-03",
-        "distanz": "ca. 70 km",
+        "id": "d90379e366ce49b0aca3ae64dd044e62",
+        "von": "Reims",
+        "nach": "Rouen",
+        "datum": "2026-08-30",
+        "distanz": "ca. 280 km",
         "notiz": "",
-        "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
-      },
-      {
-        "id": "6e86df6eac394bb6bb524e3f58cf6416",
-        "von": "Saint-Malo",
-        "nach": "Ploubazlanec",
-        "datum": "2026-09-05",
-        "distanz": "ca. 115 km",
-        "notiz": "Check-in Ferienhaus ab 14:00",
-        "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
-      },
-      {
-        "id": "371dcf599684419980c609d7c6f48568",
-        "von": "Ploubazlanec",
-        "nach": "Troyes",
-        "datum": "2026-09-12",
-        "distanz": "ca. 620 km",
-        "notiz": "Rückreise-Tag 1, Check-out bis 10:00",
-        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
-      },
-      {
-        "id": "27e66aee03154fd28358977577c18413",
-        "von": "Troyes",
-        "nach": "Ulm",
-        "datum": "2026-09-13",
-        "distanz": "ca. 545 km",
-        "notiz": "Rückreise-Tag 2, Heimfahrt",
-        "etappeId": "2dc059fcc59d426da898a8064a51e87a"
+        "link": "",
+        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       }
     ],
     "sightseeing": [
       {
-        "id": 1785861637893,
+        "id": "1785861637893",
         "titel": "Cathédrale Notre-Dame de Reims",
         "ort": "Reimes",
         "kategorie": "Bauwerk",
@@ -225,7 +234,7 @@
         "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
       },
       {
-        "id": 1785861903333,
+        "id": "1785861903333",
         "titel": "Art-déco-Architektur",
         "ort": "Reims",
         "kategorie": "Bauwerk",
@@ -235,7 +244,7 @@
         "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
       },
       {
-        "id": 1785862100520,
+        "id": "1785862100520",
         "titel": "Kathedrale Notre-Dame de Rouen",
         "ort": "Rouen",
         "kategorie": "Bauwerk",
@@ -245,7 +254,7 @@
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
-        "id": 1785863307797,
+        "id": "1785863307797",
         "titel": "Gustave-Flaubert Brücke",
         "ort": "Rouen",
         "kategorie": "Bauwerk",
@@ -255,7 +264,7 @@
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
-        "id": 1786392111066,
+        "id": "1786392111066",
         "titel": "Aître Saint-Maclou",
         "ort": "Rouen",
         "kategorie": "Bauwerk",
@@ -265,7 +274,7 @@
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
-        "id": 1786392569750,
+        "id": "1786392569750",
         "titel": "Pâtisseries de Gill",
         "ort": "Rouen",
         "kategorie": "Shopping ",
@@ -277,7 +286,7 @@
     ],
     "events": [
       {
-        "id": 1785834080383,
+        "id": "1785834080383",
         "titel": "Audio-Rundgang „Reims an einem Tag“",
         "datum": "2026-08-30",
         "ort": "",
@@ -288,7 +297,7 @@
         "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
       },
       {
-        "id": 1785836593596,
+        "id": "1785836593596",
         "titel": "Audio-Guide: \"Fachwerk-Altstadt & Jeanne d’Arc\"",
         "datum": "2026-08-31",
         "ort": "Rouen",
@@ -299,7 +308,7 @@
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
-        "id": 1785847728792,
+        "id": "1785847728792",
         "titel": "Market Paimpol (Hafen & Altstadt)",
         "datum": "2026-09-08",
         "ort": "Paimpol",
@@ -310,7 +319,7 @@
         "etappeId": "eef5e8b89ee34310a1e5475d89ac4fc3"
       },
       {
-        "id": 1785854201992,
+        "id": "1785854201992",
         "titel": "Regionales Event / Gezeiten",
         "datum": "2026-09-04",
         "ort": "Saint-Malo",
@@ -321,7 +330,7 @@
         "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
       },
       {
-        "id": 1786393470506,
+        "id": "1786393470506",
         "titel": "Cathédrale de Lumière",
         "datum": "2026-08-30",
         "ort": "Rouen",
@@ -334,7 +343,7 @@
     ],
     "restaurants": [
       {
-        "id": 1785836119423,
+        "id": "1785836119423",
         "name": "Brasserie Le Boulingrin",
         "ort": "Reimes",
         "kueche": "regional",
@@ -345,7 +354,7 @@
         "etappeId": "34a06534bd5f4efd8c4be05b084c0052"
       },
       {
-        "id": 1785837383556,
+        "id": "1785837383556",
         "name": "Fromagerie Bar Bickett",
         "ort": "Rouen",
         "kueche": "regional",
@@ -356,7 +365,7 @@
         "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       },
       {
-        "id": 1785847417236,
+        "id": "1785847417236",
         "name": "Buvette des Bains",
         "ort": "Saint-Malo",
         "kueche": "regional",
@@ -367,7 +376,7 @@
         "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
       },
       {
-        "id": 1785860467593,
+        "id": "1785860467593",
         "name": "L'Ancrage",
         "ort": "Saint-Malo",
         "kueche": "regional",
@@ -378,7 +387,7 @@
         "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
       },
       {
-        "id": 1785860947054,
+        "id": "1785860947054",
         "name": "Le Bistro de Jean",
         "ort": "",
         "kueche": "regional",
@@ -387,17 +396,6 @@
         "notiz": "6 rue de la Corne de Cerf, 35400, Saint-Malo France\n\nEin schönes Ambiente im Bistro-Stil, traditionelle Küche mit frischen Zutaten vom Markt",
         "link": "https://www.tripadvisor.fr/Restaurant_Review-g187104-d1148268-Reviews-Le_Bistro_de_Jean-Saint_Malo_Ille_et_Vilaine_Brittany.html",
         "etappeId": "69e7bdd9f9954040a1cf3a271a68cd3e"
-      },
-      {
-        "id": 1787691592443,
-        "name": "test -restaurant ",
-        "ort": "Rouen",
-        "kueche": "regional",
-        "reservierung": "",
-        "kontakt": "",
-        "notiz": "test2617",
-        "link": "",
-        "etappeId": "b77d2bb2c2b0453ab22612c7b3b7c538"
       }
     ]
   }

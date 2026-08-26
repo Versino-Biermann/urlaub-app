@@ -1,11 +1,22 @@
 """FastMCP-Server (stdio) fuer die Urlaub-App.
 
-Schreib-Pfad der Architektur: Dieser Server manipuliert
-``public/data.json`` und kann sie per ``publish`` ins GitHub-Repo pushen.
-GitHub Actions baut dann automatisch die GitHub-Pages-Seite.
+Schreib-Pfad der Architektur: Dieser Server liest und schreibt die Datenbank -
+dieselbe, aus der auch die App liest. Bis zum Umbau am 2026-08-26 war
+``public/data.json`` die Quelle; seit dem Frontend-Umbau liest die App diese
+Datei nicht mehr, Eintraege ueber den MCP-Weg gingen also ins Leere.
+
+``public/data.json`` bleibt bestehen, aber als Sicherung statt als Quelle:
+``publish`` exportiert den aktuellen Datenbankstand in die Datei und pusht sie
+ins GitHub-Repo. Damit friert sie nicht still auf einem alten Stand ein und
+taugt weiterhin als Backup-Import.
 
 Der Server importiert die reine Datenlogik aus :mod:`store` (das keine
 MCP-SDK kennt und separat mit pytest getestet wird).
+
+Das Schreibgeheimnis kommt ausschliesslich aus der Umgebungsvariable
+URLAUB_SCHREIBGEHEIMNIS. Fehlt sie, meldet der Server das beim Start auf
+stderr, und jeder Schreibversuch antwortet sofort mit Klartext statt spaeter
+mit einem Berechtigungsfehler der Datenbank.
 
 Getestet gegen mcp==1.28.1 (FastMCP, API: mcp.server.fastmcp.FastMCP,
 @mcp.tool(), mcp.run(transport="stdio")).
@@ -15,6 +26,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -24,7 +36,8 @@ import store
 # ---------------------------------------------------------------------------
 # Pfad-Aufloesung
 # ---------------------------------------------------------------------------
-# DATA_PATH relativ zur server.py: mcp/ -> ../public/data.json
+# DATA_PATH ist seit dem Umbau nur noch das Export-Ziel der Sicherung,
+# relativ zur server.py: mcp/ -> ../public/data.json
 # Per Env-Var URLAUB_DATA_PATH ueberschreibbar (z.B. fuer Tests/andere Umgebung).
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.environ.get(
@@ -38,6 +51,21 @@ REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(DATA_PATH), ".."))
 # blockieren: haengende git-Prozesse (z.B. pCloud-I/O-Blockade auf P:)
 # wuerden den Tool-Call sonst endlos offen halten.
 GIT_TIMEOUT_S = 60
+
+
+def pruefe_schreibzugang() -> str:
+    """Meldet beim Start, ob der Schreibzugang eingerichtet ist.
+
+    Gibt die Klartext-Meldung zurueck, wenn das Schreibgeheimnis fehlt, sonst
+    einen leeren String. Der Server startet trotzdem: Lesen (get_overview)
+    funktioniert auch ohne Geheimnis, und ein Abbruch wuerde diese Faehigkeit
+    grundlos mitnehmen. Jeder Schreibversuch wird stattdessen sofort mit
+    derselben Meldung abgewiesen.
+    """
+    if store.hat_geheimnis():
+        return ""
+    return store.MELDUNG_GEHEIMNIS_FEHLT
+
 
 mcp = FastMCP(
     name="urlaub-app",
@@ -58,37 +86,32 @@ mcp = FastMCP(
 # ---------------------------------------------------------------------------
 
 
-def _load() -> dict[str, Any]:
-    return store.load_data(DATA_PATH)
-
-
-def _save(data: dict[str, Any]) -> dict[str, Any]:
-    return store.save_data(DATA_PATH, data)
-
-
 def _add_with_etappe(kategorie: str, felder: dict[str, Any], etappe: str) -> dict:
     """Gemeinsame Logik fuer add_*-Tools mit etappe-Argument.
 
     Ist ``etappe`` nicht leer und nicht eindeutig aufloesbar, wird NICHTS
     angelegt; stattdessen kommt ein Hinweis + Kandidaten zurueck, damit der
     Aufrufer entscheidet.
+
+    Die Etappen werden nur dann aus der Datenbank geholt, wenn ueberhaupt eine
+    Etappe genannt wurde - ohne Argument spart das eine Abfrage.
     """
-    data = _load()
     etappe_id = ""
-    if (etappe or "").strip():
-        etappe_id, hinweis = store.resolve_etappe_arg(data, etappe)
-        if hinweis:
-            return {
-                "status": "rueckfrage",
-                "hinweis": hinweis,
-                "eintrag": None,
-            }
-    felder["etappeId"] = etappe_id
     try:
-        entry = store.add_entry(data, kategorie, felder)
+        if (etappe or "").strip():
+            data = store.empty_data()
+            data["data"]["etappen"] = store.liste_lesen("etappen")
+            etappe_id, hinweis = store.resolve_etappe_arg(data, etappe)
+            if hinweis:
+                return {
+                    "status": "rueckfrage",
+                    "hinweis": hinweis,
+                    "eintrag": None,
+                }
+        felder["etappeId"] = etappe_id
+        entry = store.add_entry(kategorie, felder)
     except store.StoreError as exc:
         return {"status": "fehler", "hinweis": str(exc), "eintrag": None}
-    _save(data)
     return {
         "status": "ok",
         "hinweis": f"{kategorie}-Eintrag angelegt (id {entry['id']}).",
@@ -109,7 +132,10 @@ def get_overview() -> dict:
     (name + id) und je Kategorie die Titel/Namen der Eintraege zurueck,
     damit der Aufrufer sieht, was schon erfasst ist.
     """
-    data = _load()
+    try:
+        data = store.load_data()
+    except store.StoreError as exc:
+        return {"status": "fehler", "hinweis": str(exc)}
     d = data["data"]
     counts = {cat: len(d[cat]) for cat in store.CATEGORIES}
 
@@ -130,7 +156,9 @@ def get_overview() -> dict:
         "counts": counts,
         "etappen": etappen,
         "titel": titles,
-        "data_path": DATA_PATH,
+        "quelle": store.DB_URL,
+        "schreibzugang": "fehlt" if pruefe_schreibzugang() else "eingerichtet",
+        "sicherung_pfad": DATA_PATH,
     }
 
 
@@ -147,10 +175,8 @@ def add_etappe(
     name ist Pflicht. vonDatum/bisDatum als ISO-Datum (YYYY-MM-DD) oder "".
     link: optionale URL (z.B. Buchungsseite), leer = kein Link.
     """
-    data = _load()
     try:
         entry = store.add_entry(
-            data,
             "etappen",
             {
                 "name": name,
@@ -162,7 +188,6 @@ def add_etappe(
         )
     except store.StoreError as exc:
         return {"status": "fehler", "hinweis": str(exc), "eintrag": None}
-    _save(data)
     return {
         "status": "ok",
         "hinweis": f"Etappe '{name}' angelegt (id {entry['id']}).",
@@ -337,12 +362,10 @@ def update_eintrag(kategorie: str, id: str, felder: dict) -> dict:
     id: die String-id des Eintrags. felder: dict der zu aendernden Felder.
     Enum-Felder (typ/status) werden validiert. id bleibt unveraendert.
     """
-    data = _load()
     try:
-        entry = store.update_entry(data, kategorie, id, felder or {})
+        entry = store.update_entry(kategorie, id, felder or {})
     except store.StoreError as exc:
         return {"status": "fehler", "hinweis": str(exc), "eintrag": None}
-    _save(data)
     return {
         "status": "ok",
         "hinweis": f"{kategorie}-Eintrag {id} aktualisiert.",
@@ -357,12 +380,10 @@ def delete_eintrag(kategorie: str, id: str) -> dict:
     kategorie: etappen, bookings, route, sightseeing, events oder restaurants.
     Gibt den geloeschten Eintrag zurueck.
     """
-    data = _load()
     try:
-        entry = store.delete_entry(data, kategorie, id)
+        entry = store.delete_entry(kategorie, id)
     except store.StoreError as exc:
         return {"status": "fehler", "hinweis": str(exc), "eintrag": None}
-    _save(data)
     return {
         "status": "ok",
         "hinweis": f"{kategorie}-Eintrag {id} geloescht.",
@@ -372,16 +393,34 @@ def delete_eintrag(kategorie: str, id: str) -> dict:
 
 @mcp.tool()
 def publish(message: str = "Update Reisedaten") -> dict:
-    """Veroeffentlicht die aktuelle public/data.json ins GitHub-Repo.
+    """Sichert den Datenbankstand nach public/data.json und pusht sie.
 
-    Committet AUSSCHLIESSLICH public/data.json und pusht den aktuellen
-    Branch (HEAD) nach origin.
-    GitHub Actions baut danach automatisch die GitHub-Pages-Seite.
+    Seit dem Datenbank-Umbau ist das ein Sicherungswerkzeug, kein
+    Veroeffentlichungsweg mehr: die App liest ihre Daten direkt aus der
+    Datenbank, ein Push aendert an dem, was Christof sieht, nichts. Der Zweck
+    ist, die Daten nicht nur an einer Stelle liegen zu haben.
 
-    Bewusst getrennt von den add_*-Tools: erst mehrere Eintraege sammeln,
-    dann einmal veroeffentlichen. Fehler werden als Klartext zurueckgegeben.
+    Ablauf: Datenbank auslesen, im alten data.json-Format schreiben,
+    AUSSCHLIESSLICH diese Datei committen und den aktuellen Branch (HEAD)
+    nach origin pushen.
+
+    Fehler werden als Klartext zurueckgegeben.
     """
     rel_data = os.path.relpath(DATA_PATH, REPO_ROOT).replace("\\", "/")
+
+    steps_vorab: list[str] = []
+    try:
+        gesichert = store.export_datei(DATA_PATH)
+    except store.StoreError as exc:
+        return {"status": "fehler", "hinweis": str(exc), "schritte": steps_vorab}
+    except OSError as exc:
+        return {
+            "status": "fehler",
+            "hinweis": f"Sicherungsdatei nicht schreibbar: {exc}",
+            "schritte": steps_vorab,
+        }
+    anzahl = sum(len(gesichert["data"][cat]) for cat in store.CATEGORIES)
+    steps_vorab.append(f"{rel_data} aus der Datenbank geschrieben ({anzahl} Eintraege)")
 
     def _git(*args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
@@ -392,7 +431,7 @@ def publish(message: str = "Update Reisedaten") -> dict:
             timeout=GIT_TIMEOUT_S,
         )
 
-    steps: list[str] = []
+    steps: list[str] = list(steps_vorab)
 
     try:
         add = _git("add", rel_data)
@@ -433,8 +472,8 @@ def publish(message: str = "Update Reisedaten") -> dict:
                 return {
                     "status": "nichts_zu_tun",
                     "hinweis": (
-                        "Keine Aenderungen an data.json und kein "
-                        "unveroeffentlichter Commit."
+                        "Die Sicherung war schon auf dem Stand der Datenbank "
+                        "und es liegt kein ungepushter Commit vor."
                     ),
                     "schritte": steps,
                 }
@@ -469,13 +508,20 @@ def publish(message: str = "Update Reisedaten") -> dict:
     return {
         "status": "ok",
         "hinweis": (
-            "public/data.json veroeffentlicht. GitHub Actions baut jetzt "
-            "automatisch die Seite."
+            f"Sicherung von {anzahl} Eintraegen in {rel_data} gepusht. Die App "
+            f"selbst liest weiterhin direkt aus der Datenbank."
         ),
         "schritte": steps,
     }
 
 
 if __name__ == "__main__":
+    # Fehlender Schreibzugang wird beim Start gemeldet, nicht erst beim ersten
+    # abgewiesenen Schreibvorgang. stderr, damit die stdio-Verbindung zum
+    # MCP-Client sauber bleibt - der Client zeigt das in seinem Server-Log.
+    _meldung = pruefe_schreibzugang()
+    if _meldung:
+        print(f"urlaub-app MCP: {_meldung}", file=sys.stderr, flush=True)
+
     # stdio-Transport (Standard fuer lokale MCP-Server in Claude Code).
     mcp.run(transport="stdio")
