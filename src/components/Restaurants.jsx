@@ -1,30 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LinkedText from './LinkedText'
 import EntryLink from './EntryLink'
+import Datenstand from './Datenstand'
 import { formatDate } from '../format'
-
-const STORAGE_KEY = 'urlaub-app.restaurants'
-
-function loadRestaurants() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+import { useListe } from '../useListe'
 
 function emptyForm() {
   return { name: '', ort: '', kueche: '', reservierung: '', kontakt: '', notiz: '', link: '', etappeId: '' }
-}
-
-function loadEtappenListe() {
-  try {
-    const raw = localStorage.getItem('urlaub-app.etappen')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
 }
 
 const OHNE_ETAPPE = '__ohne-etappe__'
@@ -38,41 +20,37 @@ function matchesEtappeFilter(eintrag, filter) {
 }
 
 export default function Restaurants() {
-  const [restaurants, setRestaurants] = useState(loadRestaurants)
+  const liste = useListe('restaurants')
+  const restaurants = liste.eintraege
+  // Nur lesend: die Etappen liefern die Auswahl fuer Filter und Zuordnung.
+  const etappenListe = useListe('etappen').eintraege
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [etappeFilter, setEtappeFilter] = useState('')
-  const etappenListe = loadEtappenListe()
   const gefilterteRestaurants = restaurants.filter((r) => matchesEtappeFilter(r, etappeFilter))
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(restaurants))
-  }, [restaurants])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) return
     if (editId !== null) {
-      setRestaurants((prev) =>
-        prev.map((r) => (r.id === editId ? { ...r, ...form } : r)),
-      )
+      const ok = await liste.aendern(editId, form)
+      if (!ok) return
       setEditId(null)
       setForm(emptyForm())
       return
     }
-    const neuesRestaurant = { id: Date.now(), ...form }
-    setRestaurants((prev) => [...prev, neuesRestaurant])
-    setForm(emptyForm())
+    const ok = await liste.anlegen(form)
+    if (ok) setForm(emptyForm())
   }
 
-  function handleDelete(restaurant) {
+  async function handleDelete(restaurant) {
     if (!window.confirm(`Restaurant "${restaurant.name}" wirklich löschen?`)) return
-    setRestaurants((prev) => prev.filter((r) => r.id !== restaurant.id))
+    await liste.loeschen(restaurant.id)
   }
 
   function handleEdit(restaurant) {
@@ -88,6 +66,14 @@ export default function Restaurants() {
   return (
     <section>
       <h2>Restaurants</h2>
+
+      <Datenstand
+        laden={liste.laden}
+        ladeFehler={liste.ladeFehler}
+        ausKopie={liste.ausKopie}
+        stand={liste.stand}
+        schreibFehler={liste.schreibFehler}
+      />
 
       {etappenListe.length > 0 && (
         <div className="list-filter">
@@ -108,7 +94,7 @@ export default function Restaurants() {
         </div>
       )}
 
-      {restaurants.length === 0 ? (
+      {liste.laden || liste.ladeFehler ? null : restaurants.length === 0 ? (
         <p className="empty">Noch keine Restaurants erfasst.</p>
       ) : gefilterteRestaurants.length === 0 ? (
         <p className="empty">Keine Restaurants für diese Etappe.</p>
