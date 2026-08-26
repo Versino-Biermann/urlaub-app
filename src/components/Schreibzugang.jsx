@@ -47,8 +47,16 @@ export default function Schreibzugang() {
 
   return (
     <div className="schreibzugang">
+      {/*
+        Bewusst NICHT "aktiv": die App weiss an dieser Stelle nur, dass ein
+        Geheimnis hinterlegt ist - nicht, ob es stimmt. Geprueft wird es erst
+        von der Datenbank beim ersten Speichern. "aktiv" waere ein Versprechen,
+        das die App nicht halten kann; bei einem Tippfehler haette Christof
+        sich in Sicherheit gewiegt. Passt das Geheimnis nicht, sagt die
+        Fehlermeldung beim Speichern genau, was zu tun ist.
+      */}
       <span className="schreibzugang-status">
-        {aktiv ? 'Schreibzugang: aktiv' : 'Schreibzugang: nur Lesen'}
+        {aktiv ? 'Schreibzugang: Geheimnis hinterlegt' : 'Schreibzugang: nur Lesen'}
       </span>
 
       <button type="button" onClick={() => setOffen((v) => !v)}>
