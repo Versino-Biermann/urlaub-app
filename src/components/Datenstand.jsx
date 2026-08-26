@@ -13,10 +13,32 @@ function standText(iso) {
   return `Stand ${zwei(zeit.getDate())}.${zwei(zeit.getMonth() + 1)}.${zeit.getFullYear()}, ${zwei(zeit.getHours())}:${zwei(zeit.getMinutes())} Uhr`
 }
 
-export default function Datenstand({ laden, ladeFehler, ausKopie, stand, schreibFehler }) {
+export default function Datenstand({
+  laden,
+  ladeFehler,
+  ausKopie,
+  stand,
+  schreibFehler,
+  nichtGeladeneBereiche = [],
+  bereicheGesamt = 0,
+}) {
   return (
     <>
       {laden && <p className="datenstand laden">Daten werden geladen…</p>}
+
+      {/*
+        Teilausfall der verknuepften Bereiche. Ohne diesen Hinweis waere eine
+        nicht ladbare Nebenliste von einer wirklich leeren nicht zu
+        unterscheiden - der Nutzer saehe schlicht nichts und hielte das fuer
+        die Wahrheit.
+      */}
+      {!laden && nichtGeladeneBereiche.length > 0 && (
+        <p className="datenstand fehler" role="alert">
+          Achtung: {nichtGeladeneBereiche.length} von {bereicheGesamt} verknüpften Bereichen
+          konnten nicht geladen werden: {nichtGeladeneBereiche.join(', ')}. Für diese Bereiche
+          bedeutet ein fehlender Eintrag in der Übersicht NICHT, dass keiner vorhanden ist.
+        </p>
+      )}
 
       {!laden && ladeFehler && (
         <p className="datenstand fehler" role="alert">

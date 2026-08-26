@@ -162,6 +162,7 @@ export function useListen(namen) {
   const [laden, setLaden] = useState(true)
   const [ausKopie, setAusKopie] = useState(false)
   const [stand, setStand] = useState(null)
+  const [gescheitert, setGescheitert] = useState([])
 
   useEffect(() => {
     let abgebrochen = false
@@ -173,26 +174,35 @@ export function useListen(namen) {
         liste.map(async (name) => {
           try {
             const e = await db.alleLesen(name)
-            return { name, ...e }
+            return { name, ...e, gescheitert: false }
           } catch {
-            // Eine unerreichbare Nebenliste darf die Etappen-Ansicht nicht
-            // ganz verhindern - sie erscheint dann eben leer.
-            return { name, eintraege: [], ausKopie: false, stand: null }
+            // Eine unerreichbare Nebenliste darf die ganze Ansicht nicht
+            // verhindern - die uebrigen Bereiche sollen weiter nutzbar sein.
+            //
+            // Sie darf aber auch NICHT als "leer" durchgehen: "keine
+            // Restaurants" und "Restaurants nicht ladbar" sind fuer den Nutzer
+            // zwei voellig verschiedene Aussagen. Deshalb wird der Name hier
+            // festgehalten und ueber "gescheitert" nach aussen gereicht - die
+            // Ansicht muss ihn sichtbar machen.
+            return { name, eintraege: [], ausKopie: false, stand: null, gescheitert: true }
           }
         }),
       )
       if (abgebrochen) return
       const neu = {}
+      const fehlgeschlagen = []
       let irgendeineKopie = false
       let aeltesterStand = null
       for (const e of ergebnisse) {
         neu[e.name] = e.eintraege
+        if (e.gescheitert) fehlgeschlagen.push(e.name)
         if (e.ausKopie) {
           irgendeineKopie = true
           if (e.stand && (!aeltesterStand || e.stand < aeltesterStand)) aeltesterStand = e.stand
         }
       }
       setDaten(neu)
+      setGescheitert(fehlgeschlagen)
       setAusKopie(irgendeineKopie)
       setStand(aeltesterStand)
       setLaden(false)
@@ -204,5 +214,5 @@ export function useListen(namen) {
     }
   }, [schluessel])
 
-  return { daten, laden, ausKopie, stand }
+  return { daten, laden, ausKopie, stand, gescheitert }
 }

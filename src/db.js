@@ -284,8 +284,17 @@ export async function alleLesen(liste) {
 
 // Erzeugt eine neue Kennung. Bewusst als Zeichenkette: die Spalte "id" ist
 // text, und die App vergleicht Kennungen ohnehin durchgehend als Zeichenkette.
+//
+// Aufbau: Zeitstempel, Bindestrich, Zufallsanteil.
+//   Zeitstempel zuerst, damit neue Eintraege in der nach "id" sortierten
+//   Abfrage weiterhin chronologisch einsortiert werden.
+//   Der Zufallsanteil verhindert, dass zwei Geraete, die in derselben
+//   Millisekunde etwas anlegen, dieselbe Kennung erzeugen - der zweite Eintrag
+//   wuerde den ersten sonst ueberschreiben. Genau das darf nicht passieren,
+//   weil alle Geraete denselben Stand zeigen sollen.
 export function neueKennung() {
-  return String(Date.now())
+  const zufall = Math.random().toString(36).slice(2).padEnd(6, '0').slice(0, 6)
+  return `${Date.now()}-${zufall}`
 }
 
 // Legt an und liefert den Eintrag so zurueck, wie die Datenbank ihn gespeichert
